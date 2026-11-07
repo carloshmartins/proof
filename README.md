@@ -2,6 +2,8 @@
 
 **Evidence that an iOS change actually works, for coding agents and the people reviewing their work.**
 
+**Documentation: https://carloshmartins.github.io/proof**
+
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-lightgrey.svg)
 

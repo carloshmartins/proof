@@ -1,0 +1,48 @@
+---
+title: proof
+description: Evidence that an iOS change actually works, for coding agents and the people reviewing their work.
+template: splash
+hero:
+  tagline: Evidence that an iOS change actually works, for coding agents and the people reviewing their work.
+  actions:
+    - text: What proof does
+      link: start/what-it-does/
+      icon: right-arrow
+    - text: Install
+      link: start/install/
+      variant: minimal
+    - text: View on GitHub
+      link: https://github.com/carloshmartins/proof
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+AI coding agents can change an iOS app in minutes. They are much worse at knowing whether the change
+works. `proof` is a small command-line tool that gives them, and you, the evidence.
+
+<CardGrid>
+	<Card title="Readable builds and tests" icon="document">
+		`proof build` and `proof test` print each error with `file:line` and each failing test with its
+		assertion. Nothing else.
+	</Card>
+	<Card title="Eyes and hands on the simulator" icon="laptop">
+		`proof ui tree` shows the screen as text. `proof ui tap --id …` acts on it by accessibility
+		identifier.
+	</Card>
+	<Card title="Before and after" icon="seti:image">
+		`proof snap home --compare base` screenshots a screen and lists what changed compared with the
+		branch your PR targets.
+	</Card>
+	<Card title="Every PR in a stack" icon="list-format">
+		`proof test --stack` tests each branch of a stacked PR on its own and marks the one that broke
+		something.
+	</Card>
+	<Card title="One report" icon="open-book">
+		`proof packet --open` puts the build, tests and screenshots side by side in an HTML page.
+	</Card>
+	<Card title="Nothing in your repo" icon="approve-check">
+		No SDK, no test target, no code in your app. Everything proof writes goes to `~/.proof`.
+	</Card>
+</CardGrid>
