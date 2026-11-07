@@ -1,0 +1,37 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build -workspace /Users/me/dev/App/App.xcworkspace -scheme App
+
+User defaults from command line:
+    IDEPackageSupportUseBuiltinSCM = YES
+
+Prepare packages
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+
+CompileSwift normal arm64 /Users/me/dev/App/Modules/Login/Sources/LoginView.swift (in target 'Login' from project 'App')
+    cd /Users/me/dev/App
+    builtin-swiftTaskExecution -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend -c
+
+/Users/me/dev/App/Modules/Login/Sources/LoginView.swift:42:17: error: cannot find 'viewModel' in scope
+                viewModel.submit()
+                ^~~~~~~~~
+/Users/me/dev/App/Modules/Login/Sources/LoginView.swift:10:9: warning: variable 'unused' was never used; consider replacing with '_' or removing it
+        let unused = 1
+            ^~~~~~
+/Users/me/dev/App/Modules/Settings/Sources/SettingsStore.swift:88:5: error: missing return in instance method expected to return 'Bool' (in target 'Settings' from project 'App')
+/Users/me/dev/App/Modules/Login/Sources/LoginView.swift:10:9: warning: variable 'unused' was never used; consider replacing with '_' or removing it
+
+Undefined symbols for architecture arm64:
+  "_OBJC_CLASS_$_SyncClient", referenced from:
+       in SyncService.o
+ld: symbol(s) not found for architecture arm64
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+
+** BUILD FAILED **
+
+
+The following build commands failed:
+	SwiftCompile normal arm64 /Users/me/dev/App/Modules/Login/Sources/LoginView.swift (in target 'Login' from project 'App')
+/Users/me/dev/App/Modules/Login/Sources/LoginView.swift:42:17: error: cannot find 'viewModel' in scope
+(2 failures)

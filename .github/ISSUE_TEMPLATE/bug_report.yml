@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in proof doesn't work as documented
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you ran, what you expected, and what you got instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. proof init --scheme App --simulator "iPhone 16"
+        2. proof flow run login
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output
+      description: The command output, ideally with `--json`. For runner problems, attach `~/.proof/runner/runner.log`. Remove anything private first.
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: proof version
+      placeholder: proof --version
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: macOS, Xcode and simulator
+      placeholder: macOS 26.1, Xcode 26.3, iPhone 16 Pro (iOS 26.1)
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [CLI, Simulator runner, Flows, Stack testing, Agent skill, Other]

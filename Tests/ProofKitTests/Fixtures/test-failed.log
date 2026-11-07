@@ -1,0 +1,28 @@
+Test Suite 'All tests' started at 2026-11-07 10:00:00.000.
+Test Suite 'LoginTests.xctest' started at 2026-11-07 10:00:00.001.
+Test Suite 'LoginViewModelTests' started at 2026-11-07 10:00:00.002.
+Test Case '-[LoginTests.LoginViewModelTests testValidEmail]' started.
+Test Case '-[LoginTests.LoginViewModelTests testValidEmail]' passed (0.002 seconds).
+Test Case '-[LoginTests.LoginViewModelTests testInvalidPassword]' started.
+/Users/me/dev/App/Modules/Login/Tests/LoginViewModelTests.swift:57: error: -[LoginTests.LoginViewModelTests testInvalidPassword] : XCTAssertEqual failed: ("nil") is not equal to ("Optional("Wrong password")")
+Test Case '-[LoginTests.LoginViewModelTests testInvalidPassword]' failed (0.010 seconds).
+Test Case '-[LoginTests.LoginViewModelTests testSkipped]' started.
+Test Case '-[LoginTests.LoginViewModelTests testSkipped]' skipped (0.001 seconds).
+Test case 'SyncTests.testConnect()' passed on 'Clone 1 of iPhone 16 - App (12345)' (0.123 seconds)
+Test case 'SyncTests.testReconnect()' failed on 'Clone 1 of iPhone 16 - App (12345)' (1.010 seconds)
+/Users/me/dev/App/Modules/Sync/Tests/SyncTests.swift:31: error: SyncTests.testReconnect() : Asynchronous wait failed: Exceeded timeout of 1 seconds
+◇ Test run started.
+↳ Testing Library Version: 6.2
+◇ Test "Parses time presets" started.
+✔ Test "Parses time presets" passed after 0.004 seconds.
+◇ Test progressSmoothing() started.
+✘ Test progressSmoothing() recorded an issue at ProgressTests.swift:19:5: Expectation failed: (smoothed → 0.88) == 0.9
+✘ Test progressSmoothing() failed after 0.002 seconds with 1 issue.
+✘ Test run with 2 tests failed after 0.006 seconds with 1 issue.
+Test Suite 'LoginViewModelTests' failed at 2026-11-07 10:00:00.020.
+	 Executed 3 tests, with 1 failure (0 unexpected) in 0.013 (0.015) seconds
+
+Failing tests:
+	LoginViewModelTests.testInvalidPassword()
+
+** TEST FAILED **
