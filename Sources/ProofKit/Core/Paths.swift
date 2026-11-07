@@ -36,6 +36,12 @@ public enum Paths {
     public static func exists(_ path: String) -> Bool { FileManager.default.fileExists(atPath: path) }
 
     /// Branch names contain "/" — flatten them for directory names.
+    /// A path for messages: the home folder shown as `~`.
+    public static func display(_ path: String) -> String {
+        let home = NSHomeDirectory()
+        return path == home ? "~" : path.hasPrefix(home + "/") ? "~" + path.dropFirst(home.count) : path
+    }
+
     public static func sanitize(_ s: String) -> String {
         String(s.map { $0 == "/" || $0 == ":" || $0 == " " ? "_" : $0 })
     }

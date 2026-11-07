@@ -215,8 +215,10 @@ proof snap login --compare develop    # vs any branch you name
 Lines starting with `-` disappeared and lines starting with `+` are new. The diff shows the change as text
 for the agent; the packet shows the screenshots side by side for you.
 
-The other branch needs a snap with the same name. `proof flow run <flow> --stack` takes care of that for
-every branch of a stack.
+The other branch needs a snap with the same name. A flow does it for you: `proof flow run <flow> --compare
+base` replays the flow on the base branch first when it has no snaps yet (in a worktree, your checkout is
+untouched), then diffs every screen. `proof flow run <flow> --stack` does the same for every branch of a
+stack.
 
 ### The report: `proof packet`
 
@@ -405,7 +407,7 @@ Delete the folder to reset everything.
 | "no scheme is configured" | `proof init --scheme <Scheme> --simulator "<Device>"` |
 | "no stack found" | The branch needs an open PR (`gh pr create`), or pass `--branches a,b,c`. |
 | `--compare base` picks the wrong branch | Check the PR's base on GitHub, or set the trunk: `proof init --trunk <branch>`. |
-| "no 'login' snap on develop to compare with" | Snap the same screen on that branch first, or use `proof flow run <flow> --stack`. |
+| "no 'login' snap on develop to compare with" | Put the screen in a flow and run `proof flow run <flow> --compare develop`: proof snaps develop for you. |
 | "element not found" | Run `proof ui tree` and pick a selector that's actually on screen. |
 | The runner doesn't start | Read `~/.proof/runner/runner.log`. If the port is taken: `PROOF_PORT=22100 proof ui start`. |
 | Anything else | Run `proof doctor` and [open an issue](https://github.com/carloshmartins/proof/issues/new/choose) with its output. |

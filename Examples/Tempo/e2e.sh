@@ -67,6 +67,12 @@ check "tap" "$proof" ui tap --id timer.start
 check "expect" "$proof" ui expect --id timer.running
 check "a missing element fails" sh -c "! \"$proof\" ui expect --id nope --timeout 1"
 
+step "before and after in one command"
+mkdir -p "$PROOF_HOME/flows/Tempo" && printf 'launch\nsnap start\n' > "$PROOF_HOME/flows/Tempo/start.flow"
+check "flow run --compare replays the flow on feat/models first and diffs against it" \
+  sh -c "\"$proof\" flow run start --compare feat/models 2>&1 | tee \"$work/baseline.txt\" | grep -q '+ *button #timer.presets'"
+check "the baseline ran on feat/models" grep -q "baseline: replaying start on feat/models" "$work/baseline.txt"
+
 step "report"
 check "proof packet writes the report" sh -c "\"$proof\" packet >/dev/null && test -s \"$PROOF_HOME/sessions/Tempo/feat_presets-ui/report.html\""
 

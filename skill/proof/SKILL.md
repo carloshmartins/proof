@@ -101,9 +101,12 @@ proof packet --open              # open the HTML report (screens side by side)
 ```
 
 Never assume the base is `main`. `base` is the branch this branch's PR targets (the branch below it in a
-stack, `develop`, a release branch…), or the repo's default branch when there is no PR. The other branch
-needs a snap with the same name: check it out in a worktree (or ask the user), run the same flow, and snap
-with the same names. `proof flow run <flow> --stack` does this for every branch of a stack.
+stack, `develop`, a release branch…), or the repo's default branch when there is no PR.
+
+The easiest way to get a before and after is a flow: `proof flow run <flow> --compare base`. If the base
+branch doesn't have the flow's snaps yet, proof replays the flow there first (in a worktree, your checkout
+is untouched), reinstalls your branch, and diffs every snap. `--fresh-baseline` replays it again.
+`proof flow run <flow> --stack` does this for every branch of a stack.
 
 ## Accessibility identifiers
 

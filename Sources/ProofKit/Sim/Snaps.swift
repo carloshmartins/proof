@@ -24,7 +24,8 @@ public struct SnapRecord: Codable, Report {
             } else if diff != nil {
                 out.append("no tree changes vs \(compareBranch)")
             } else {
-                out.append("no '\(name)' snap on \(compareBranch) to compare with")
+                out.append("no '\(name)' snap on \(compareBranch) to compare with · put it in a flow and run "
+                           + "`proof flow run <flow> --compare \(compareBranch)`: proof snaps \(compareBranch) for you")
             }
         }
         return out.joined(separator: "\n")

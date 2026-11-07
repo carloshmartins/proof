@@ -7,6 +7,11 @@ and the layout of `~/.proof`.
 
 ## [Unreleased]
 
+### Added
+- Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
+  first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
+  and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.
+
 ### Fixed
 - Starting the simulator runner is reliable: each start gets a session the runner echoes on `/health`, so a
   runner still shutting down on the same port is no longer mistaken for the new one, the port is cleared

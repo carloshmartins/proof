@@ -15,7 +15,7 @@ Start with `proof doctor`. It checks Xcode, the simulator, the runner, `gh` and 
 | "no stack found" | The branch needs an open PR (`gh pr create`), or pass `--branches a,b,c`. |
 | `--compare base` picks the wrong branch | Check the PR's base branch on GitHub, or set the trunk: `proof init --trunk <branch>`. |
 | The trunk shows `main` but you use `develop` | `git remote set-head origin --auto`, or `proof init --trunk develop`. |
-| "no 'login' snap on develop to compare with" | Snap the same screen on that branch first, or use `proof flow run <flow> --stack`. |
+| "no 'login' snap on develop to compare with" | Put the screen in a flow and run `proof flow run <flow> --compare develop`: proof snaps develop for you. |
 | "element not found" | Run `proof ui tree` and pick a selector that's actually on screen. |
 | The runner doesn't start | Read `~/.proof/runner/runner.log`, or open `~/.proof/runner/src/ProofRunner.xcodeproj` in Xcode. |
 | The runner's port is taken | `PROOF_PORT=22100 proof ui start` |

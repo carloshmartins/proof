@@ -28,14 +28,40 @@ tree diff vs develop:
 - Snapping a name again replaces it, so a snap always shows the latest state of that screen.
 - The snap also counts interactive elements that have no accessibility identifier.
 
-## The other branch needs the same snap
+## Before and after in one command
 
-A diff needs a snap with the same name on the other branch. If it doesn't exist, proof says
-`no 'login' snap on develop to compare with`. Two ways to get one:
+A diff needs a snap with the same name on the other branch. The easiest way to get both is a
+[flow](../flows/) that snaps the screens:
 
-- Check out the other branch (or use a worktree), go to the same screen and snap it with the same name.
-- Write a [flow](../flows/) that snaps the screens, and run it on every branch with
-  `proof flow run <flow> --stack`.
+```sh
+proof flow run home --compare base
+```
+
+```
+baseline: replaying home on feat/presets first, in ~/.proof/worktrees/Tempo
+baseline: feat/presets (c911e09) · 2/2 steps ok
+baseline: reinstalling feat/presets-ui
+FLOW home · feat/presets-ui (fce227b) · 2/2 ok · 2.4s
+✓  1 launch     1.8s
+✓  2 snap home  0.5s
+       tree diff vs feat/presets:
+       -     button #timer.start "Start"
+       +     button #timer.start "Start 25:00"
+       +     button #timer.presets "Presets"
+```
+
+When the base branch doesn't have the flow's snaps yet, proof:
+
+1. checks the base branch out in its worktree (your checkout is untouched), builds it, installs it and
+   replays the flow there,
+2. rebuilds and reinstalls your branch, uncommitted changes included,
+3. runs the flow on your branch and diffs every snap.
+
+The next run reuses the base branch's snaps. `--fresh-baseline` replays it again (after the base branch
+moved); `--no-baseline` never does.
+
+With a single `proof snap --compare`, there is no flow to replay: snap the same screen on the other branch
+yourself, or use a flow. For every branch of a stack, use `proof flow run <flow> --stack`.
 
 ## Where snaps live
 
