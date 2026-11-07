@@ -7,6 +7,10 @@ and the layout of `~/.proof`.
 
 ## [Unreleased]
 
+### Added
+- proof finds its runner sources and agent skill in `<prefix>/share/proof` next to `<prefix>/bin/proof`,
+  so a Homebrew install (`brew install carloshmartins/tap/proof`) works without a checkout.
+
 ### Changed
 - proof no longer assumes `main`. The trunk (where stacks start) defaults to the repository's default
   branch (`origin/HEAD`, else a local `main`, `master` or `develop`); `proof init --trunk` still overrides it.

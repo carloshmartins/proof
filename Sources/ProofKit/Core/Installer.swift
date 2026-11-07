@@ -21,14 +21,18 @@ public enum Installer {
         Paths.join(NSHomeDirectory(), ".claude", "skills", "proof")
     }
 
-    /// The resources next to an executable: `../Resources` inside an app bundle
-    /// (`Contents/Helpers/proof`), or the repo when run from a checkout (`.build/<config>/proof`).
-    /// Symlinks are resolved first, so `/usr/local/bin/proof → ….app/Contents/Helpers/proof` works.
+    /// The resources next to an executable: `../share/proof` for a Homebrew or `PREFIX` install
+    /// (`<prefix>/bin/proof`), `../Resources` inside an app bundle (`Contents/Helpers/proof`), or the repo
+    /// when run from a checkout (`.build/<config>/proof`). Symlinks are resolved first, so
+    /// `/opt/homebrew/bin/proof → Cellar/proof/<version>/bin/proof` works.
     public static func resources(executable: String) -> Resources? {
         let exe = Paths.canonical(executable)
         var dir = (exe as NSString).deletingLastPathComponent
-        let bundled = Resources(root: Paths.join((dir as NSString).deletingLastPathComponent, "Resources"))
-        if bundled.isComplete { return bundled }
+        let prefix = (dir as NSString).deletingLastPathComponent
+        for root in [Paths.join(prefix, "share", "proof"), Paths.join(prefix, "Resources")] {
+            let candidate = Resources(root: root)
+            if candidate.isComplete { return candidate }
+        }
         // A checkout: walk up from .build/arm64-apple-macosx/release to the package root.
         for _ in 0..<6 {
             let candidate = Resources(root: dir)

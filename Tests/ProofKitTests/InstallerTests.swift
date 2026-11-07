@@ -40,6 +40,16 @@ final class InstallerTests: XCTestCase {
         XCTAssertEqual(Installer.resources(executable: tmp + "/bin/proof")?.root, contents + "/Resources")
     }
 
+    func testFindsHomebrewLayoutThroughSymlink() throws {
+        // Homebrew: /opt/homebrew/bin/proof → Cellar/proof/0.2.0/bin/proof, resources in Cellar/…/share/proof.
+        let keg = tmp + "/Cellar/proof/0.2.0"
+        try makeResources(keg + "/share/proof")
+        try touchExecutable(keg + "/bin/proof")
+        try FileManager.default.createDirectory(atPath: tmp + "/bin", withIntermediateDirectories: true)
+        try FileManager.default.createSymbolicLink(atPath: tmp + "/bin/proof", withDestinationPath: keg + "/bin/proof")
+        XCTAssertEqual(Installer.resources(executable: tmp + "/bin/proof")?.root, keg + "/share/proof")
+    }
+
     func testFindsCheckoutFromBuildFolder() throws {
         let repo = tmp + "/proof"
         try makeResources(repo)
