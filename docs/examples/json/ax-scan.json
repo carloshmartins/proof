@@ -1,0 +1,12 @@
+{
+  "filesScanned" : 148,
+  "findings" : [
+    {
+      "control" : "Button",
+      "file" : "Modules/Timer/Sources/PresetsView.swift",
+      "kind" : "swiftui",
+      "line" : 23,
+      "snippet" : "Button(\"Add preset\") { model.add() }"
+    }
+  ]
+}

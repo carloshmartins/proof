@@ -1,0 +1,68 @@
+{
+  "flow" : "start-timer",
+  "runs" : [
+    {
+      "branch" : "feat/models",
+      "build" : "succeeded",
+      "buildErrors" : [
+
+      ],
+      "changedScreens" : {
+        "running" : 0
+      },
+      "comparedWith" : "develop",
+      "flow" : {
+        "branch" : "feat/presets",
+        "duration" : 7.6,
+        "flow" : "start-timer",
+        "sha" : "8a6c41e",
+        "steps" : [
+          {
+            "duration" : 2.1,
+            "index" : 1,
+            "line" : "launch",
+            "status" : "ok"
+          },
+          {
+            "duration" : 0.4,
+            "index" : 2,
+            "line" : "tap --id timer.start",
+            "status" : "ok"
+          },
+          {
+            "duration" : 5,
+            "index" : 3,
+            "line" : "expect --id timer.running",
+            "status" : "ok"
+          },
+          {
+            "duration" : 0,
+            "index" : 4,
+            "line" : "snap running",
+            "status" : "ok"
+          }
+        ]
+      },
+      "pr" : 41,
+      "sha" : "a1b2c3d"
+    },
+    {
+      "branch" : "feat/presets",
+      "build" : "failed",
+      "buildErrors" : [
+        {
+          "column" : 17,
+          "file" : "Modules/Timer/Sources/TimerView.swift",
+          "kind" : "error",
+          "line" : 42,
+          "message" : "cannot find 'viewModel' in scope"
+        }
+      ],
+      "changedScreens" : {
+
+      },
+      "pr" : 42,
+      "sha" : "8a6c41e"
+    }
+  ]
+}

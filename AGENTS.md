@@ -10,6 +10,7 @@
 | `Sources/ProofKit` | everything the CLI does: brief parser, stack, runner client, flows, events, history, packet |
 | `Runner/` | XCUITest runner project, installed to `~/.proof/runner/src` |
 | `skill/proof/SKILL.md` | the agent skill installed by `make install` |
+| `docs/` | documentation site (Starlight), deployed to GitHub Pages on merge to `main` |
 
 ## Commands
 
@@ -28,4 +29,8 @@ make install                       # CLI → ~/.local/bin, runner sources, skill
 - New public API gets unit tests in `Tests/ProofKitTests`. Keep `swift test` green.
 - `Runner/` is a hand-edited Xcode project: adding a source file means adding its PBXFileReference,
   PBXBuildFile, group child and Sources phase entry. Use fresh 24-hex IDs.
+- A user-facing change updates the docs page that describes it (`docs/src/content/docs/`).
+- Changing a command, an option, its help text or a `--json` report? Run `make docs-reference` and commit
+  the result. `docs/src/content/docs/reference/commands/` and `json-output.md` are generated; CI fails if
+  they're stale. New report types get an example in `Tests/ProofKitTests/DocExamplesTests.swift`.
 - Releases: update `CHANGELOG.md`, bump `version` in `Sources/proof/Proof.swift`, tag `X.Y.Z`.

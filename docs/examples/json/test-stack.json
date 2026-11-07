@@ -1,0 +1,59 @@
+{
+  "branches" : [
+    {
+      "branch" : "feat/models",
+      "pr" : 41,
+      "result" : {
+        "action" : "test",
+        "duration" : 58.9,
+        "errors" : [
+
+        ],
+        "status" : "succeeded",
+        "tests" : {
+          "failed" : 0,
+          "failures" : [
+
+          ],
+          "passed" : 182,
+          "skipped" : 2
+        },
+        "warningCount" : 0
+      },
+      "sha" : "a1b2c3d"
+    },
+    {
+      "branch" : "feat/presets",
+      "pr" : 42,
+      "result" : {
+        "action" : "test",
+        "duration" : 61.4,
+        "errors" : [
+
+        ],
+        "status" : "failed",
+        "tests" : {
+          "failed" : 1,
+          "failures" : [
+            {
+              "file" : "Tests/TimerTests.swift",
+              "line" : 57,
+              "message" : "XCTAssertEqual failed: (\"25\") is not equal to (\"15\")",
+              "test" : "TimerTests/testPresetPersists"
+            }
+          ],
+          "passed" : 181,
+          "skipped" : 2
+        },
+        "warningCount" : 0
+      },
+      "sha" : "8a6c41e"
+    }
+  ],
+  "introduced" : {
+    "TimerTests/testPresetPersists" : "feat/presets"
+  },
+  "skipped" : [
+
+  ]
+}

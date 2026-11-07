@@ -2,7 +2,7 @@ PREFIX ?= $(HOME)/.local
 PROOF_HOME ?= $(HOME)/.proof
 SKILL_DIR ?= $(HOME)/.agents/skills/proof
 
-.PHONY: build test install uninstall runner
+.PHONY: build test install uninstall runner docs-reference docs
 
 build:
 	swift build -c release
@@ -27,3 +27,15 @@ uninstall:
 	rm -f "$(PREFIX)/bin/proof"
 	rm -rf "$(PROOF_HOME)/runner" "$(SKILL_DIR)"
 	@echo "kept $(PROOF_HOME)/config.json and sessions; delete $(PROOF_HOME) to remove everything"
+
+# Regenerates the command reference and JSON examples in docs/ from the code. CI fails if they're stale.
+docs-reference:
+	swift build
+	PROOF_UPDATE_DOCS=1 swift test --filter DocExamplesTests
+	"$$(swift build --show-bin-path)/proof" --experimental-dump-help > .build/proof-help.json
+	node docs/scripts/gen-reference.mjs .build/proof-help.json
+
+# Serves the documentation site at http://localhost:4321/proof/
+docs: docs-reference
+	cd docs && npm ci && npm run dev
+

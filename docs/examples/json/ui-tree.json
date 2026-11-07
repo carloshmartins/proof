@@ -1,0 +1,35 @@
+{
+  "nodes" : [
+    {
+      "depth" : 2,
+      "enabled" : true,
+      "frame" : [
+        16,
+        680,
+        361,
+        50
+      ],
+      "id" : "timer.start",
+      "label" : "Start",
+      "type" : "button"
+    },
+    {
+      "depth" : 2,
+      "enabled" : true,
+      "frame" : [
+        16,
+        740,
+        361,
+        50
+      ],
+      "id" : "timer.presets",
+      "label" : "Presets",
+      "type" : "button"
+    }
+  ],
+  "rendered" : "button #timer.start \"Start\"\nbutton #timer.presets \"Presets\"",
+  "screen" : {
+    "height" : 852,
+    "width" : 393
+  }
+}

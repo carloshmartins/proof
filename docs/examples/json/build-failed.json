@@ -1,0 +1,15 @@
+{
+  "action" : "build",
+  "duration" : 38.2,
+  "errors" : [
+    {
+      "column" : 17,
+      "file" : "Modules/Timer/Sources/TimerView.swift",
+      "kind" : "error",
+      "line" : 42,
+      "message" : "cannot find 'viewModel' in scope"
+    }
+  ],
+  "status" : "failed",
+  "warningCount" : 3
+}

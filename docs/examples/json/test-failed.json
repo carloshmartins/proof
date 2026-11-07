@@ -1,0 +1,22 @@
+{
+  "action" : "test",
+  "duration" : 61.4,
+  "errors" : [
+
+  ],
+  "status" : "failed",
+  "tests" : {
+    "failed" : 1,
+    "failures" : [
+      {
+        "file" : "Tests/TimerTests.swift",
+        "line" : 57,
+        "message" : "XCTAssertEqual failed: (\"25\") is not equal to (\"15\")",
+        "test" : "TimerTests/testPresetPersists"
+      }
+    ],
+    "passed" : 181,
+    "skipped" : 2
+  },
+  "warningCount" : 0
+}

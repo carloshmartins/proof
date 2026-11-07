@@ -1,0 +1,34 @@
+{
+  "branch" : "feat/presets",
+  "duration" : 7.6,
+  "failureSnap" : "~/.proof/sessions/Tempo/feat_presets/snaps/start-timer-failed.png",
+  "flow" : "start-timer",
+  "sha" : "8a6c41e",
+  "steps" : [
+    {
+      "duration" : 2.1,
+      "index" : 1,
+      "line" : "launch",
+      "status" : "ok"
+    },
+    {
+      "duration" : 0.4,
+      "index" : 2,
+      "line" : "tap --id timer.start",
+      "status" : "ok"
+    },
+    {
+      "duration" : 5,
+      "error" : "no element matching #timer.running within 5s",
+      "index" : 3,
+      "line" : "expect --id timer.running",
+      "status" : "failed"
+    },
+    {
+      "duration" : 0,
+      "index" : 4,
+      "line" : "snap running",
+      "status" : "skipped"
+    }
+  ]
+}
