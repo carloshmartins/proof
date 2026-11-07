@@ -24,6 +24,11 @@ the simulator, and they often say "done" when the screen is broken.
 You don't change your app. No test target, no SDK, no code. proof works from the outside, and everything it
 writes goes to `~/.proof`, never into your repository.
 
+![proof test --stack tests each PR of a stack and marks the one that introduced a failing test](docs/public/media/stack.gif)
+
+<sub>A stack of three PRs in the [Tempo demo app](Examples/Tempo). The middle PR breaks a test, and proof says
+so. Real output; the wait while it builds and tests is sped up 8×.</sub>
+
 ## Quick start
 
 ```sh
@@ -72,36 +77,16 @@ error  Modules/Login/Sources/LoginView.swift:42:17  cannot find 'viewModel' in s
 error  Modules/Settings/Sources/SettingsStore.swift:88:5  missing return in instance method expected to return 'Bool'
 ```
 
-**Look at the screen.** The simulator's accessibility tree, as text an agent can read:
+**Look at the screen, prove the change, act on it.** The accessibility tree as text an agent can read; a
+snap compared with the branch this PR targets; then a tap and a check, by identifier, never by guessing
+coordinates:
 
-```
-$ proof ui tree -i
-button #login.submit "Log in"
-textField #login.email "Email"
-secureTextField #login.password "Password"
-```
+![proof ui tree, proof snap --compare base, proof ui tap and proof ui expect on the Tempo demo app](docs/public/media/snap.gif)
 
-**Act on it.** By identifier, never by guessing coordinates:
+**Hand over a report.** `proof packet --open` opens one page with the build, the stack and every screen
+before and after, with what changed:
 
-```sh
-proof ui type "me@example.com" --id login.email
-proof ui tap --id login.submit
-proof ui expect --id home.title      # fails (exit 1) if the home screen doesn't appear
-```
-
-**Prove the change.** Screenshot the screen and compare it with the branch your PR targets:
-
-```
-$ proof snap home --compare base
-snap home → ~/.proof/sessions/Tempo/feat_presets/snaps/home.png
-tree diff vs develop:
-- button #timer.start "Start"
-+ button #timer.start "Start 25:00"
-+ button #timer.presets "Presets"
-```
-
-**Hand over a report.** `proof packet --open` opens one HTML page with the build, the tests and every
-screen before and after.
+<img src="docs/public/media/report.png" alt="The proof report: stack results, the home screen on feat/presets and feat/presets-ui side by side, and the tree diff" width="720">
 
 ---
 

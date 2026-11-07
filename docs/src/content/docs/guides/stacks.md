@@ -21,6 +21,8 @@ it's not obvious where to fix it. proof tests every branch on its own and tells 
 proof test --stack
 ```
 
+![proof test --stack on a stack of three PRs](/proof/media/stack.gif)
+
 ```
 STACK 3 branches · failures
 ✓ feat/models (a1b2c3d)  182 passed, 0 failed

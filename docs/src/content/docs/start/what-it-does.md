@@ -25,6 +25,8 @@ An agent working on an iOS app has three blind spots:
 
 ## See it
 
+![proof ui tree, proof snap --compare base, proof ui tap and proof ui expect on the Tempo demo app](/proof/media/snap.gif)
+
 ```
 $ proof build
 BUILD FAILED · 2 errors · 14 warnings · 38.2s
@@ -47,6 +49,10 @@ tree diff vs develop:
 + button #timer.start "Start 25:00"
 + button #timer.presets "Presets"
 ```
+
+And the report a reviewer gets from `proof packet --open`:
+
+![The proof report: stack results, the home screen on two branches side by side, and the tree diff](/proof/media/report.png)
 
 ## What proof is not
 
