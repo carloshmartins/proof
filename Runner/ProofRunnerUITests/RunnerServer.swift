@@ -54,7 +54,10 @@ final class RunnerServer {
         let body: Data
         switch request.path {
         case "/health":
-            body = Data(#"{"ok":true}"#.utf8)
+            // The session proof gave this runner at start, so it can tell this runner from one that is still
+            // shutting down on the same port.
+            let health: [String: Any] = ["ok": true, "session": ProcessInfo.processInfo.environment["PROOF_SESSION"] ?? ""]
+            body = (try? JSONSerialization.data(withJSONObject: health)) ?? Data(#"{"ok":true}"#.utf8)
         case "/shutdown":
             stopLock.lock(); _shouldStop = true; stopLock.unlock()
             body = Data(#"{"ok":true}"#.utf8)

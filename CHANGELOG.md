@@ -7,6 +7,12 @@ and the layout of `~/.proof`.
 
 ## [Unreleased]
 
+### Fixed
+- Starting the simulator runner is reliable: each start gets a session the runner echoes on `/health`, so a
+  runner still shutting down on the same port is no longer mistaken for the new one, the port is cleared
+  before a start, and connection errors right after a start are retried up to 4 times with backoff. This
+  fixes `proof run` sometimes failing with "Could not connect to the server".
+
 ## [0.2.0] - 2026-11-07
 
 ### Added
