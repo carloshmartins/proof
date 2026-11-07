@@ -1,80 +1,267 @@
 # proof
 
-**Let coding agents prove their iOS changes work.**
+**Evidence that an iOS change actually works, for coding agents and the people reviewing their work.**
 
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-lightgrey.svg)
 
-Agents can write, build and test iOS changes faster than you can read them. `proof` is a small command-line
-tool that gives them, and you, evidence: build and test output condensed to what matters, a simulator they
-can drive through the accessibility tree, screenshots with accessibility-tree diffs against `main`, every
-branch of a PR stack tested in isolation, and one HTML report to review before merging.
+AI coding agents (Claude Code, Codex, Cursor…) can change an iOS app in minutes. They are much worse at
+knowing whether the change works. They drown in thousands of lines of `xcodebuild` output, they can't see
+the simulator, and they often say "done" when the screen is broken.
 
-Everything stays on your Mac. There's no account and no telemetry, and nothing is ever written into your
-repository: all state lives in `~/.proof`.
+`proof` is a command-line tool that closes that gap. It gives an agent, or you, five things:
 
-> **Status: early (0.x).** The CLI, the flow format and the `~/.proof` layout may change between minor
-> versions. Feedback and issues are very welcome.
+| | What you get | Command |
+|---|---|---|
+| 1 | **Build and test results you can read.** Errors with `file:line`, failing tests with the assertion. Nothing else. | `proof build`, `proof test` |
+| 2 | **Eyes and hands on the simulator.** See what's on screen as text, then tap, type and swipe by accessibility identifier. | `proof ui …` |
+| 3 | **Before and after.** A screenshot of a screen, plus a list of what changed on it compared with the branch your PR targets. | `proof snap <screen> --compare base` |
+| 4 | **Every PR in a stack tested on its own.** Find the exact PR that broke a test or a screen. | `proof test --stack` |
+| 5 | **One report for the reviewer.** Build, tests and screenshots side by side in an HTML page. | `proof packet --open` |
 
-## What you need
+You don't change your app. No test target, no SDK, no code. proof works from the outside, and everything it
+writes goes to `~/.proof`, never into your repository.
 
-| | |
-|---|---|
-| **Mac** | macOS 14 Sonoma or newer |
-| **Xcode** | Xcode 16 or newer, with at least one iOS Simulator runtime installed |
-| **Your app** | An iOS app in a **git repository**: a `.xcworkspace`, a `.xcodeproj` (Tuist works too) or a Swift package at the repo root |
-| **GitHub CLI** | [`gh`](https://cli.github.com), signed in, for stack testing and PR comments. Everything else works without it. |
+> **Status: early (0.x).** Commands, the flow format and the `~/.proof` layout can still change between
+> minor versions. Feedback and issues are very welcome.
 
-You don't add a UI test target, a framework or any code to your app. proof drives the simulator from the
-outside.
+---
+
+## Contents
+
+- [See it in 60 seconds](#see-it-in-60-seconds)
+- [Install](#install)
+- [Set up your app](#set-up-your-app)
+- [Use it with a coding agent](#use-it-with-a-coding-agent)
+- [What each part does](#what-each-part-does)
+- [Branches: main, develop, release branches and stacks](#branches-main-develop-release-branches-and-stacks)
+- [Stacked pull requests](#stacked-pull-requests)
+- [Flows: replayable UI journeys](#flows-replayable-ui-journeys)
+- [All commands](#all-commands)
+- [How it works](#how-it-works)
+- [Privacy](#privacy)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+
+---
+
+## See it in 60 seconds
+
+**Build.** Instead of 3,000 lines of compiler log:
+
+```
+$ proof build
+BUILD FAILED · 2 errors · 14 warnings · 38.2s
+error  Modules/Login/Sources/LoginView.swift:42:17  cannot find 'viewModel' in scope
+error  Modules/Settings/Sources/SettingsStore.swift:88:5  missing return in instance method expected to return 'Bool'
+```
+
+**Look at the screen.** The simulator's accessibility tree, as text an agent can read:
+
+```
+$ proof ui tree -i
+button #login.submit "Log in"
+textField #login.email "Email"
+secureTextField #login.password "Password"
+```
+
+**Act on it.** By identifier, never by guessing coordinates:
+
+```sh
+proof ui type "me@example.com" --id login.email
+proof ui tap --id login.submit
+proof ui expect --id home.title      # fails (exit 1) if the home screen doesn't appear
+```
+
+**Prove the change.** Screenshot the screen and compare it with the branch your PR targets:
+
+```
+$ proof snap home --compare base
+snap home → ~/.proof/sessions/Tempo/feat_presets/snaps/home.png
+tree diff vs develop:
+- button #timer.start "Start"
++ button #timer.start "Start 25:00"
++ button #timer.presets "Presets"
+```
+
+**Hand over a report.** `proof packet --open` opens one HTML page with the build, the tests and every
+screen before and after.
+
+---
 
 ## Install
 
+You need a Mac with **macOS 14+**, **Xcode 16+** and at least one **iOS Simulator** runtime. For stacks
+and PR comments you also need the [GitHub CLI](https://cli.github.com) (`gh`), signed in.
+
 ```sh
 git clone https://github.com/carloshmartins/proof && cd proof
-make install     # proof → ~/.local/bin, simulator runner → ~/.proof/runner, agent skill → ~/.agents/skills/proof
+make install
 ```
 
-Make sure `~/.local/bin` is on your `PATH` (`proof --help` should work in a new terminal). Then, in your
-app's repository:
+`make install` does three things:
+
+1. Puts the `proof` command in `~/.local/bin` (make sure that folder is on your `PATH`).
+2. Copies the simulator runner's sources to `~/.proof/runner`. The runner builds itself the first time you
+   use `proof ui` (about a minute, once).
+3. Installs the **agent skill** in `~/.agents/skills/proof`, so agents know how to use proof.
+
+Check it: run `proof --help` in a new terminal.
+
+## Set up your app
+
+Once per repository, from its folder:
 
 ```sh
 proof init --scheme MyApp --simulator "iPhone 16"
 proof doctor
 ```
 
-## Working with coding agents
+- `--scheme` is the Xcode scheme to build and test.
+- `--simulator` is the simulator to run on (a name or a UDID).
+- Optional: `--test-plan Unit`, `--bundle-id com.example.app`, `--prepare "tuist generate"` (a command to
+  run in a fresh checkout before building), `--trunk develop` (see
+  [Branches](#branches-main-develop-release-branches-and-stacks)).
 
-1. `make install` also installs an **agent skill** (`~/.agents/skills/proof`) that teaches agents to use
-   `proof` instead of raw `xcodebuild` and `simctl`. If your agent reads skills from another folder:
-   `make install SKILL_DIR=<folder>/proof`.
-2. Let the agent work. It runs `proof build`, `proof test --stack`, `proof flow run …`,
-   `proof snap … --compare main`.
-3. Before merging, open the report: `proof packet --open`.
+`proof init --show` prints the settings. `proof doctor` checks Xcode, the simulator, the runner and `gh`,
+and tells you what's missing. Settings live in `~/.proof/config.json`, not in your repo.
 
-## The CLI in one page
+proof works with a `.xcworkspace`, a `.xcodeproj` (Tuist included) or a Swift package at the repository
+root.
+
+## Use it with a coding agent
+
+After `make install`, agents that read skills from `~/.agents/skills` pick proof up automatically. If yours
+reads another folder:
 
 ```sh
-proof init --scheme MyApp --simulator "iPhone 16"   # one-time project setup
-proof doctor                         # check Xcode, simulators and the runner
-proof build                          # BUILD FAILED · 2 errors · 14 warnings · 38.2s, then file:line per error
-proof test                           # failing tests with file:line and the assertion message
-proof test --stack                   # every branch of the PR stack; failures marked "← introduced here"
-proof run                            # build, install and launch on the simulator
-proof ui tree                        # button #login.submit "Log in" …
-proof ui tap --id login.submit
-proof snap login --compare main      # screenshot + accessibility-tree diff vs main
-proof record start                   # … proof ui commands … then: proof record stop login
-proof flow run login --stack         # replay a flow on every branch
-proof ax scan                        # controls without accessibility identifiers
-proof pr comments                    # unresolved review threads
-proof packet --open                  # one HTML report: results, screens, before/after
-proof stop                           # end the newest running command
+make install SKILL_DIR=~/.claude/skills/proof
 ```
 
-What `proof test --stack` prints:
+The skill tells the agent to:
+
+- use `proof build` and `proof test` instead of raw `xcodebuild`,
+- look at the screen with `proof ui tree` before tapping,
+- prove UI changes with `proof snap <screen> --compare base`,
+- finish with `proof packet` and give you the report's path.
+
+Then ask for a change as usual. Before merging, read the report instead of guessing from the diff:
+
+```sh
+proof packet --open
+```
+
+---
+
+## What each part does
+
+### Build and test: `proof build`, `proof test`
+
+They run `xcodebuild` for you and print only what matters: the result, each error with `file:line`, and
+each failing test with its assertion message. Paths are relative to your repo, and duplicates are removed.
+
+```sh
+proof build                  # errors only
+proof build --warnings       # also list warnings
+proof test                   # the configured test plan
+proof test --only AppTests/LoginTests/testInvalidPassword
+xcodebuild … 2>&1 | proof brief    # condense output you already have
+```
+
+### The simulator: `proof run`, `proof ui`
+
+`proof run` builds, installs and launches your app on the simulator. `proof ui` then drives it through the
+**accessibility tree**: the same structure VoiceOver uses, where every element has a type, an optional
+identifier (`#login.submit`) and a label (`"Log in"`).
+
+```sh
+proof ui tree                 # everything on screen
+proof ui tree -i              # interactive elements only
+proof ui tap --id login.submit          # also --label "Log in", --text "log"
+proof ui type "hello" --id search.field --clear
+proof ui swipe up
+proof ui wait --id home.title --timeout 15
+proof ui expect --id home.title         # an assertion: exit 1 if it's not there
+proof ui alert                          # accept a system alert (--dismiss, --button "Allow")
+```
+
+Elements without an identifier are hard to target reliably. `proof ax scan` lists the controls in your
+code that have none, and `proof ui tree --missing-ids` does the same for the current screen.
+
+### Before and after: `proof snap`
+
+`proof snap <name>` saves a screenshot and the accessibility tree of the current screen. With `--compare`,
+it also lists what changed compared with the snap of the same name on another branch:
+
+```sh
+proof snap login                      # just this branch
+proof snap login --compare base       # vs the branch this PR targets
+proof snap login --compare develop    # vs any branch you name
+```
+
+Lines starting with `-` disappeared and lines starting with `+` are new. The diff shows the change as text
+for the agent; the packet shows the screenshots side by side for you.
+
+The other branch needs a snap with the same name. `proof flow run <flow> --stack` takes care of that for
+every branch of a stack.
+
+### The report: `proof packet`
+
+`proof packet` collects everything this branch produced (build, tests, stack results, accessibility
+findings, screenshots and their diffs) into `report.md` and `report.html` under `~/.proof`. `--open` opens
+the HTML page. Nothing is uploaded anywhere.
+
+### PR review comments: `proof pr comments`
+
+Lists the unresolved review threads on this branch's PR, with `path:line`, so an agent can address them.
+
+---
+
+## Branches: main, develop, release branches and stacks
+
+proof never assumes your main branch is called `main`. Two words matter:
+
+- **Trunk**: the branch your work starts from. By default it's the repository's **default branch on
+  GitHub** (what `origin/HEAD` points to: `main`, `master`, `develop`…). If git doesn't know it, proof
+  looks for a local `main`, `master` or `develop`. To set it yourself:
+
+  ```sh
+  proof init --trunk develop
+  ```
+
+- **Base**: the branch a pull request **targets**. Usually the trunk, but not always: a fix for
+  `release/2.0`, or a PR in the middle of a stack, targets another branch.
+
+`--compare base` uses the base. It asks GitHub which branch this branch's PR targets and compares with that
+one. Without an open PR, it uses the trunk.
+
+| Your branch | Its PR targets | `--compare base` compares with |
+|---|---|---|
+| `feat/login` | `main` | `main` |
+| `feat/login` | `develop` | `develop` |
+| `fix/crash` | `release/2.0` | `release/2.0` |
+| `feat/presets-ui` (2nd PR in a stack) | `feat/presets` | `feat/presets` |
+| `spike/idea` | no PR | the trunk |
+
+You can always name a branch directly: `--compare release/2.0`.
+
+## Stacked pull requests
+
+A **stack** is a chain of small PRs where each one builds on the one below:
 
 ```
+develop
+ └─ feat/models              PR #1 → develop
+     └─ feat/presets         PR #2 → feat/models
+         └─ feat/presets-ui  PR #3 → feat/presets
+```
+
+Small PRs are easier to review, but a bug in PR #1 shows up as failures in #2 and #3 too. proof finds the
+stack from your open PRs (it works with [`gh stack`](https://github.com/github/gh-stack), Graphite, spr or
+stacks made by hand) and tests each branch on its own:
+
+```
+$ proof test --stack
 STACK 3 branches · failures
 ✓ feat/models (a1b2c3d)  182 passed, 0 failed
 ✗ feat/presets (8a6c41e)  182 passed, 1 failed
@@ -83,7 +270,22 @@ STACK 3 branches · failures
     FAIL TimerTests/testPresetPersists  (from feat/presets)
 ```
 
-A flow file is the `proof ui` syntax without the prefix:
+`← introduced here` marks the PR that broke the test, so you fix it there, not at the top.
+
+```sh
+proof test --stack                    # the stack the current branch belongs to
+proof test --stack --stop-on-fail
+proof test --stack --branches a,b,c   # an explicit list, bottom to top
+proof flow run login --stack          # replay a UI flow on every branch, comparing each with the one below
+```
+
+Each branch is checked out in a separate worktree under `~/.proof/worktrees`, so your own checkout is
+never touched. A stack can start from any branch: `main`, `develop` or a release branch.
+
+## Flows: replayable UI journeys
+
+A flow is a plain text file of `proof ui` steps, without the `proof ui` prefix. It turns "I checked the
+login screen by hand" into something an agent can rerun on every branch.
 
 ```
 launch --arg -resetState
@@ -94,8 +296,47 @@ expect --id home.title --timeout 15
 snap home
 ```
 
-Also `sleep <seconds>`, `include <flow>`, and `${VAR}` from `--var NAME=value` or the environment. A failed
-step snaps the screen as `<flow>-failed`, so you see what was actually there.
+Flows also support `sleep <seconds>`, `include <other-flow>`, and `${NAME}` variables from
+`--var NAME=value` or the environment. Keep passwords out of the file: use `${PASSWORD}`.
+
+```sh
+proof record start                   # then run proof ui commands…
+proof record stop login              # …and save them as the flow "login"
+proof flow list
+proof flow run login --var EMAIL=a@b.c
+proof flow run login --compare base --video
+proof flow run login --stack
+```
+
+A failing step stops the flow and snaps the screen as `<flow>-failed`, so you see what was actually there.
+Flows live in `~/.proof/flows/<repo>/`.
+
+---
+
+## All commands
+
+Every command prints short text by default, accepts `--json` for scripts, and exits non-zero on failure.
+
+| Command | What it does |
+|---|---|
+| `proof init` | Save this repo's settings (scheme, simulator, trunk…) |
+| `proof doctor` | Check Xcode, simulators, the runner and `gh` |
+| `proof setup` | Reinstall the runner sources and the agent skill |
+| `proof build` | Build and print a condensed result |
+| `proof test` | Test this branch (`--stack` for every branch of the stack) |
+| `proof brief` | Condense `xcodebuild` output from stdin |
+| `proof run` | Build, install and launch on the simulator |
+| `proof ui tree / tap / type / swipe / wait / expect / alert / at / launch / home` | Drive the simulator |
+| `proof snap <name>` | Screenshot + accessibility tree (`--compare base` or a branch name) |
+| `proof record start / stop <name>` | Record `proof ui` steps into a flow |
+| `proof flow list / show / check / run` | Manage and replay flows |
+| `proof video start / stop` | Record the simulator screen |
+| `proof ax scan` | Find controls without accessibility identifiers in your code |
+| `proof pr comments` | Unresolved review threads on this branch's PR |
+| `proof packet` | Build the HTML/Markdown report (`--open` to view it) |
+| `proof stop` | Stop the newest running proof command, like Ctrl-C (`--all` for every one) |
+
+`proof <command> --help` shows every option.
 
 ## How it works
 
@@ -111,23 +352,21 @@ step snaps the screen as `<flow>-failed`, so you see what was actually there.
    ProofRunner (XCUITest) ──▶ iOS Simulator ──▶ your app
 ```
 
-- **Events.** Every build, test, step, snap, flow and video appends a JSON line to
-  `~/.proof/sessions/<repo>/<branch>/events.jsonl`. Long commands also register themselves in
-  `~/.proof/active/`, which is how `proof stop` finds runs started elsewhere. Other tools can read these
-  files to show runs live.
-- **Runner.** A generic XCUITest bundle attaches to any installed app by bundle identifier and serves
-  commands on `127.0.0.1:22087` (the simulator shares the Mac's loopback). It's built on first use and
-  rebuilt only when its sources change. Your app needs no test target.
-- **Stacks.** Each branch of a PR stack is checked out in one reusable worktree
-  (`~/.proof/worktrees/<repo>`) with its own DerivedData, so builds stay incremental and your checkout is
-  never touched.
+- **Runner.** A small, generic XCUITest bundle attaches to any installed app by bundle identifier and takes
+  commands on `127.0.0.1:22087`. That's how proof taps and reads the screen without a UI test target in your
+  app. It's built on first use and rebuilt only when its sources change.
+- **Events.** Every build, test, step, snap and flow appends a JSON line to
+  `~/.proof/sessions/<repo>/<branch>/events.jsonl`. Long commands also register in `~/.proof/active/`,
+  which is how `proof stop` finds them. Other tools can read these files to show runs live.
+- **Stacks.** Each branch is checked out in one reusable worktree (`~/.proof/worktrees/<repo>`) with its own
+  DerivedData, so builds stay incremental and your checkout is never touched.
 
 What's in `~/.proof`:
 
 ```
 ~/.proof/
-  config.json                    project settings, keyed by the main checkout
-  sessions/<repo>/<branch>/      events.jsonl, results and their history, snaps/, logs, videos, report
+  config.json                    settings per repo
+  sessions/<repo>/<branch>/      events, results, snaps, logs, videos, report
   flows/<repo>/                  your .flow files
   active/                        runs in progress
   runner/                        runner sources, build and log
@@ -138,37 +377,41 @@ Delete the folder to reset everything.
 
 ## Privacy
 
-- No network access beyond what you ask for: `gh` talks to GitHub for stacks and PR comments, and Xcode
-  does what Xcode does. The runner listens on localhost only.
 - No accounts, analytics or telemetry.
+- The only network access is what you ask for: `gh` talks to GitHub for stacks, PR bases and PR comments.
+  The runner listens on localhost only.
 - Nothing is written to your repository. Screenshots, videos and logs stay in `~/.proof`.
-- Keep secrets out of flow files: use `${PASSWORD}` and pass `--var PASSWORD=…` or an environment variable.
 
 ## Troubleshooting
 
 | Problem | Try |
 |---|---|
-| `proof: command not found` | Run `make install` in this repo and check `~/.local/bin` is on your `PATH`. |
-| "… is not inside a git repository" | Run `git init` in the project. |
-| "no scheme is configured" | `proof init --scheme <Scheme> --simulator "<Device>"` in the repo. |
-| The runner doesn't start | Read `~/.proof/runner/runner.log`, or open `~/.proof/runner/src/ProofRunner.xcodeproj` in Xcode. If the port is taken: `PROOF_PORT=22100 proof ui start`. |
+| `proof: command not found` | Check `~/.local/bin` is on your `PATH`, or run `make install` again. |
+| "not inside a git repository" | Run proof from inside your app's git repository. |
+| "no scheme is configured" | `proof init --scheme <Scheme> --simulator "<Device>"` |
+| "no stack found" | The branch needs an open PR (`gh pr create`), or pass `--branches a,b,c`. |
+| `--compare base` picks the wrong branch | Check the PR's base on GitHub, or set the trunk: `proof init --trunk <branch>`. |
+| "no 'login' snap on develop to compare with" | Snap the same screen on that branch first, or use `proof flow run <flow> --stack`. |
+| "element not found" | Run `proof ui tree` and pick a selector that's actually on screen. |
+| The runner doesn't start | Read `~/.proof/runner/runner.log`. If the port is taken: `PROOF_PORT=22100 proof ui start`. |
 | Anything else | Run `proof doctor` and [open an issue](https://github.com/carloshmartins/proof/issues/new/choose) with its output. |
 
-## Building and contributing
+## Contributing
 
 ```sh
-swift build && swift test            # CLI and ProofKit (tests also run on Linux)
+swift build && swift test     # also runs on Linux
 make install
 ```
 
 ```
-Sources/proof        CLI commands (ArgumentParser)
-Sources/ProofKit     build/test parser, stacks, runner client, flows, events, history, packet
-Runner/              XCUITest runner project, installed to ~/.proof/runner/src
+Sources/proof        command-line parsing (ArgumentParser)
+Sources/ProofKit     everything proof does: build/test parser, stacks, runner client, flows, snaps, packet
+Runner/              the XCUITest runner, installed to ~/.proof/runner/src
 skill/proof/         the agent skill installed by make install
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+Changes go through pull requests, and stacked PRs are welcome: proof tests every branch of them. See
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
