@@ -22,7 +22,7 @@ proof test --stack --branches feat/models,feat/presets,feat/presets-ui
 
 ```sh
 brew install xcodegen vhs gifsicle     # vhs brings ffmpeg; also needs Google Chrome
-make demo-media                        # → docs/public/media/{stack.gif,snap.gif,report.png}
+make demo-media                        # → assets/{stack.gif,snap.gif,report.png}
 ```
 
 `record.sh` builds proof, creates the demo repository, boots a clean "Tempo Demo" simulator (status bar

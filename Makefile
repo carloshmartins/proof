@@ -41,5 +41,5 @@ docs: docs-reference
 
 # Re-records the README/docs media from the Tempo demo app (see Examples/Tempo/README.md).
 demo-media:
-	Examples/Tempo/record.sh docs/public/media
+	Examples/Tempo/record.sh assets
 
