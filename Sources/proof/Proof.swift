@@ -21,7 +21,7 @@ struct Proof: ParsableCommand {
 
         Everything is stored under ~/.proof. Nothing is written to your repo.
         """,
-        version: "0.1.0",
+        version: "0.2.0",
         subcommands: [
             Init.self, Setup.self, Doctor.self, Build.self, Brief.self, Test.self, Run.self, Stop.self,
             UI.self, Snap.self, Record.self, FlowCommand.self, VideoCommand.self, AX.self, PR.self, PacketCommand.self,

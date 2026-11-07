@@ -7,19 +7,21 @@ and the layout of `~/.proof`.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-07
+
 ### Added
 - proof finds its runner sources and agent skill in `<prefix>/share/proof` next to `<prefix>/bin/proof`,
   so a Homebrew install (`brew install carloshmartins/tap/proof`) works without a checkout.
+- Documentation site: https://carloshmartins.github.io/proof, with a command reference and JSON output
+  docs generated from the code.
+- `--compare base` on `proof snap` and `proof flow run`: compare with the branch this branch's PR
+  targets (the branch below it in a stack), or the trunk when there is no PR.
 
 ### Changed
 - proof no longer assumes `main`. The trunk (where stacks start) defaults to the repository's default
   branch (`origin/HEAD`, else a local `main`, `master` or `develop`); `proof init --trunk` still overrides it.
 - `proof flow run --stack` compares the first branch with the branch its PR targets, so stacks into
   `develop` or a release branch work.
-
-### Added
-- `--compare base` on `proof snap` and `proof flow run`: compare with the branch this branch's PR
-  targets (the branch below it in a stack), or the trunk when there is no PR.
 
 ## [0.1.0] - 2026-11-07
 
