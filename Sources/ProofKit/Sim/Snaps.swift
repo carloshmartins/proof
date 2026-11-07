@@ -80,7 +80,7 @@ public enum Snaps {
                                 compareBranch: nil, diff: nil,
                                 missingIdentifiers: UITree.missingIdentifiers(nodes).count, nodes: json,
                                 device: ((try? Simulators.list()) ?? []).first { $0.udid == udid }?.title)
-        if let other = compareWith {
+        if let other = BaseBranch.resolve(compareWith, ctx: ctx) {
             record.compareBranch = other
             let otherDir = Paths.session(repo: ctx.repo, branch: other)
             if let base = load(sessionDir: otherDir).first(where: { $0.name == name }),
@@ -92,7 +92,7 @@ public enum Snaps {
         all.append(record)
         try save(all, sessionDir: ctx.sessionDir)
         Events.append(ProofEvent(kind: "snap", name: name, status: "ok",
-                                 detail: record.diff.map { "\($0.count) tree lines changed vs \(compareWith ?? "")" }, file: png), ctx: ctx)
+                                 detail: record.diff.map { "\($0.count) tree lines changed vs \(record.compareBranch ?? "")" }, file: png), ctx: ctx)
         return record
     }
 }

@@ -88,7 +88,7 @@ struct FlowCommand: ParsableCommand {
         @Argument(help: "Flow name or path to a .flow file.") var flow: String
         @Option(name: .customLong("var"), help: "NAME=value for ${NAME}. Repeatable.") var vars: [String] = []
         @Flag(name: .customLong("continue"), help: "Keep going after a failed step.") var continueOnFailure = false
-        @Option(help: "Compare snaps with the same-named snaps of this branch.") var compare: String?
+        @Option(help: "Compare snaps with the same-named snaps of this branch, or \"base\" for the branch this PR targets.") var compare: String?
         @Flag(help: "Record a video of the run.") var video = false
         @Flag(help: "Relaunch the app first (default with --stack).") var relaunch = false
         @Flag(help: "Build, install and replay on every branch of the stack.") var stack = false
