@@ -2,7 +2,7 @@ PREFIX ?= $(HOME)/.local
 PROOF_HOME ?= $(HOME)/.proof
 SKILL_DIR ?= $(HOME)/.agents/skills/proof
 
-.PHONY: build test install uninstall runner docs-reference docs
+.PHONY: build test install uninstall runner docs-reference docs demo-media
 
 build:
 	swift build -c release
@@ -38,4 +38,8 @@ docs-reference:
 # Serves the documentation site at http://localhost:4321/proof/
 docs: docs-reference
 	cd docs && npm ci && npm run dev
+
+# Re-records the README/docs media from the Tempo demo app (see Examples/Tempo/README.md).
+demo-media:
+	Examples/Tempo/record.sh docs/public/media
 

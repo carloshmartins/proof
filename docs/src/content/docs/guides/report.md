@@ -15,5 +15,7 @@ proof packet --open    # and open the HTML page
 - accessibility findings from `proof ax scan`,
 - every snap, with the screenshot on the other branch next to it and the tree diff.
 
+![The proof report](/proof/media/report.png)
+
 It writes `report.md` and `report.html` in `~/.proof/sessions/<repo>/<branch>/`. Nothing is uploaded
 anywhere: share the file or paste the Markdown into a PR yourself.

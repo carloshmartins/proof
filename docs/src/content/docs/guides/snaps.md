@@ -20,6 +20,8 @@ tree diff vs develop:
 + button #login.forgot "Forgot password?"
 ```
 
+![proof snap --compare base in a terminal](/proof/media/snap.gif)
+
 - Lines starting with `-` disappeared, lines starting with `+` are new.
 - `--compare base` means the branch this branch's PR targets. See
   [Branches](../branches/) for how it's chosen.
