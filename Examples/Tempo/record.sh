@@ -1,7 +1,7 @@
 #!/bin/bash
 # Records the README and docs media from the Tempo demo, on a clean simulator, with real proof output.
 #
-#   Examples/Tempo/record.sh [out-dir]      (default: docs/public/media)
+#   Examples/Tempo/record.sh [out-dir]      (default: assets)
 #
 # Needs: Xcode, xcodegen, vhs, ffmpeg, gifsicle (brew install xcodegen vhs gifsicle) and Google Chrome.
 # Nothing touches ~/.proof or your simulators: proof runs with its own PROOF_HOME on a "Tempo Demo"
@@ -9,7 +9,7 @@
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$here/../.." && pwd)
-out=${1:-$root/docs/public/media}
+out=${1:-$root/assets}
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 mkdir -p "$out"

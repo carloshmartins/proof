@@ -7,7 +7,9 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "predev": "rm -rf public/media && mkdir -p public/media && cp ../assets/*.gif ../assets/*.png public/media/",
+    "prebuild": "rm -rf public/media && mkdir -p public/media && cp ../assets/*.gif ../assets/*.png public/media/"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.42.10",
