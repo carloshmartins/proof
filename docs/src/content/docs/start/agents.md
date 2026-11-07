@@ -8,13 +8,15 @@ program needs to parse it, and exits non-zero on failure.
 
 ## The agent skill
 
-`make install` installs a skill: a short instruction file (`SKILL.md`) that agents such as Claude Code,
-Codex and Cursor read to learn a tool. It's installed in `~/.agents/skills/proof`. If your agent reads
-skills from another folder:
+proof ships a skill: a short instruction file (`SKILL.md`) that agents such as Claude Code, Codex and
+Cursor read to learn a tool. `proof setup` installs it where Claude Code reads it (`~/.claude/skills/proof`).
+For another agent, point it at that agent's skills folder:
 
 ```sh
-make install SKILL_DIR=~/.claude/skills/proof
+proof setup --skill-dir ~/.agents/skills/proof
 ```
+
+Start a new agent session afterwards, so it picks the skill up.
 
 The skill tells the agent to:
 

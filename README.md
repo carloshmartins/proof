@@ -24,6 +24,19 @@ the simulator, and they often say "done" when the screen is broken.
 You don't change your app. No test target, no SDK, no code. proof works from the outside, and everything it
 writes goes to `~/.proof`, never into your repository.
 
+## Quick start
+
+```sh
+brew install carloshmartins/tap/proof    # 1. install
+proof setup                              # 2. teach your agent to use it (installs the skill)
+cd path/to/YourApp                       # 3. once per app
+proof init --scheme YourApp --simulator "iPhone 16"
+proof build                              # 4. try it
+```
+
+Then ask your coding agent for a change. It builds, tests and checks the screen with proof, and ends with a
+report you can open with `proof packet --open`.
+
 > **Status: early (0.x).** Commands, the flow format and the `~/.proof` layout can still change between
 > minor versions. Feedback and issues are very welcome.
 
@@ -31,6 +44,7 @@ writes goes to `~/.proof`, never into your repository.
 
 ## Contents
 
+- [Quick start](#quick-start)
 - [See it in 60 seconds](#see-it-in-60-seconds)
 - [Install](#install)
 - [Set up your app](#set-up-your-app)
@@ -96,19 +110,31 @@ screen before and after.
 You need a Mac with **macOS 14+**, **Xcode 16+** and at least one **iOS Simulator** runtime. For stacks
 and PR comments you also need the [GitHub CLI](https://cli.github.com) (`gh`), signed in.
 
+### With Homebrew (recommended)
+
+```sh
+brew install carloshmartins/tap/proof
+proof setup
+```
+
+- `brew install` builds proof from source with your Xcode (about a minute) and puts `proof` on your `PATH`.
+- `proof setup` installs the **agent skill** in `~/.claude/skills/proof`, so agents know how to use proof.
+  Another agent? `proof setup --skill-dir <its skills folder>/proof`.
+- The simulator runner builds itself the first time you use `proof ui` (about a minute, once).
+
+Update with `brew upgrade proof`.
+
+### From source
+
 ```sh
 git clone https://github.com/carloshmartins/proof && cd proof
 make install
 ```
 
-`make install` does three things:
+This puts `proof` in `~/.local/bin` (make sure it's on your `PATH`) and installs the skill in
+`~/.agents/skills/proof` (`make install SKILL_DIR=<folder>/proof` for another folder).
 
-1. Puts the `proof` command in `~/.local/bin` (make sure that folder is on your `PATH`).
-2. Copies the simulator runner's sources to `~/.proof/runner`. The runner builds itself the first time you
-   use `proof ui` (about a minute, once).
-3. Installs the **agent skill** in `~/.agents/skills/proof`, so agents know how to use proof.
-
-Check it: run `proof --help` in a new terminal.
+Check either way: `proof --version`.
 
 ## Set up your app
 
@@ -133,11 +159,11 @@ root.
 
 ## Use it with a coding agent
 
-After `make install`, agents that read skills from `~/.agents/skills` pick proof up automatically. If yours
-reads another folder:
+`proof setup` installs the skill where Claude Code reads it (`~/.claude/skills/proof`). For another agent,
+point it at that agent's skills folder:
 
 ```sh
-make install SKILL_DIR=~/.claude/skills/proof
+proof setup --skill-dir ~/.agents/skills/proof
 ```
 
 The skill tells the agent to:
@@ -388,7 +414,8 @@ Delete the folder to reset everything.
 
 | Problem | Try |
 |---|---|
-| `proof: command not found` | Check `~/.local/bin` is on your `PATH`, or run `make install` again. |
+| `proof: command not found` | Homebrew: `brew install carloshmartins/tap/proof`. From source: check `~/.local/bin` is on your `PATH`. |
+| The agent doesn't use proof | Run `proof setup` (or `proof setup --skill-dir <your agent's skills folder>/proof`) and start a new agent session. |
 | "not inside a git repository" | Run proof from inside your app's git repository. |
 | "no scheme is configured" | `proof init --scheme <Scheme> --simulator "<Device>"` |
 | "no stack found" | The branch needs an open PR (`gh pr create`), or pass `--branches a,b,c`. |

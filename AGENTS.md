@@ -33,4 +33,7 @@ make install                       # CLI → ~/.local/bin, runner sources, skill
 - Changing a command, an option, its help text or a `--json` report? Run `make docs-reference` and commit
   the result. `docs/src/content/docs/reference/commands/` and `json-output.md` are generated; CI fails if
   they're stale. New report types get an example in `Tests/ProofKitTests/DocExamplesTests.swift`.
-- Releases: update `CHANGELOG.md`, bump `version` in `Sources/proof/Proof.swift`, tag `X.Y.Z`.
+- Releases: a PR that moves *Unreleased* in `CHANGELOG.md` under `## [X.Y.Z] - <date>` and bumps `version` in
+  `Sources/proof/Proof.swift`. After it merges: tag `X.Y.Z` on `main`, `gh release create X.Y.Z` with the
+  changelog section, then update `url` and `sha256` in `Formula/proof.rb` of carloshmartins/homebrew-tap
+  (`curl -sL https://github.com/carloshmartins/proof/archive/refs/tags/X.Y.Z.tar.gz | shasum -a 256`).
