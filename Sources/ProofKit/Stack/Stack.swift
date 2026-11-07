@@ -107,15 +107,17 @@ public enum StackRunner {
         try plan(ctx, explicit: explicit).branches
     }
 
-    /// The stack's branches bottom → top, and their PR numbers (best effort for explicit lists).
-    public static func plan(_ ctx: Context, explicit: [String]?) throws -> (branches: [String], prs: [String: Int]) {
+    /// The stack's branches bottom → top, their PR numbers (best effort for explicit lists), and the branch
+    /// the bottom PR targets (the trunk, or e.g. `release/2.0` when the stack doesn't start from the trunk).
+    public static func plan(_ ctx: Context, explicit: [String]?) throws -> (branches: [String], prs: [String: Int], base: String) {
         if let explicit, !explicit.isEmpty {
-            return (explicit, StackResolver.numbers((try? StackResolver.fetchPulls(cwd: ctx.root)) ?? []))
+            let pulls = (try? StackResolver.fetchPulls(cwd: ctx.root)) ?? []
+            return (explicit, StackResolver.numbers(pulls), BaseBranch.prBase(of: explicit[0], pulls: pulls) ?? ctx.trunk)
         }
         let pulls = try StackResolver.fetchPulls(cwd: ctx.root)
-        let stack = StackResolver.resolve(current: ctx.branch, trunk: ctx.config.trunkBranch, pulls: pulls)
+        let stack = StackResolver.resolve(current: ctx.branch, trunk: ctx.trunk, pulls: pulls)
         guard !stack.isEmpty else { throw ProofError.message("no stack found for \(ctx.branch). Pass --branches a,b,c") }
-        return (stack, StackResolver.numbers(pulls))
+        return (stack, StackResolver.numbers(pulls), BaseBranch.prBase(of: stack[0], pulls: pulls) ?? ctx.trunk)
     }
 
     /// Tests every branch in one reusable worktree with its own DerivedData, so your

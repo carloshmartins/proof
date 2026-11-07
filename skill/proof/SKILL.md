@@ -12,7 +12,7 @@ A non-zero exit means failure. Nothing is written to the repo; state lives in `~
 ## Rules
 
 - Never run raw `xcodebuild`. Use `proof build` and `proof test`. They print only errors, failing tests and counts.
-- Before saying a UI change is done, prove it: `proof run`, navigate with `proof ui`, then `proof snap <screen> --compare main`.
+- Before saying a UI change is done, prove it: `proof run`, navigate with `proof ui`, then `proof snap <screen> --compare base`.
 - Use `proof ui tree` to see the screen before you tap. Never guess coordinates when an id or label exists.
 - After finishing, run `proof packet` and tell the user the report path.
 - If `proof` says no scheme is configured, ask the user for it. Do not guess.
@@ -68,7 +68,7 @@ proof flow list
 proof flow show login
 proof flow check login --var EMAIL=a@b.c     # validate without running
 proof flow run login --var EMAIL=a@b.c       # stops at the first failure, snaps "<flow>-failed"
-proof flow run login --compare main --video
+proof flow run login --compare base --video
 proof flow run login --stack                 # build, install, relaunch, replay on every branch;
                                              # snaps diffed against the branch below
 ```
@@ -93,14 +93,17 @@ Use `expect` after each navigation so the flow fails where the problem is, not t
 
 ```sh
 proof snap login                 # screenshot + tree for this branch
-proof snap login --compare main  # plus a tree diff against main's "login" snap
+proof snap login --compare base  # plus a tree diff against the "login" snap of the branch this PR targets
+proof snap login --compare develop  # or name any branch
                                  # snaps/<name>.json keeps the nodes with frames (--json: "nodes")
 proof packet                     # writes report.md/report.html for this branch
 proof packet --open              # open the HTML report (screens side by side)
 ```
 
-To compare against main, snap main first: check out main in a worktree (or ask the user), run the same
-flow, and snap with the same names.
+Never assume the base is `main`. `base` is the branch this branch's PR targets (the branch below it in a
+stack, `develop`, a release branch…), or the repo's default branch when there is no PR. The other branch
+needs a snap with the same name: check it out in a worktree (or ask the user), run the same flow, and snap
+with the same names. `proof flow run <flow> --stack` does this for every branch of a stack.
 
 ## Accessibility identifiers
 
@@ -126,7 +129,8 @@ Address every unresolved thread. Use the `path:line` to find the code.
 ## Setup (only when asked)
 
 ```sh
-proof init --scheme App --simulator "iPhone 16" --test-plan Unit --trunk main
+proof init --scheme App --simulator "iPhone 16" --test-plan Unit
+proof init --trunk develop       # only if stacks don't start from the repo's default branch
 proof init --prepare "tuist generate"   # command to run in a fresh checkout before building
 proof init --show
 proof doctor

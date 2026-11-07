@@ -9,12 +9,13 @@ public struct RepoConfig: Codable, Equatable {
     public var testPlan: String?
     public var simulator: String?      // simulator name ("iPhone 16") or UDID
     public var bundleId: String?       // app under test, for `proof ui launch`
-    public var trunk: String?          // base branch of stacks, default "main"
+    public var trunk: String?          // base branch of stacks; nil means the repo's default branch
     public var extraBuildArgs: [String]?
     public var prepare: String?        // shell command run in a checkout before building (e.g. "tuist generate")
 
     public init() {}
 
+    /// The configured trunk, or "main". Prefer `Context.trunk`, which falls back to the repo's default branch.
     public var trunkBranch: String { trunk ?? "main" }
 }
 
@@ -42,6 +43,8 @@ public struct Context {
     public let repo: String          // repo name
     public let branch: String
     public var config: RepoConfig
+    /// The repository's default branch (origin/HEAD, else main/master/develop), when git knows it.
+    public var defaultBranch: String? = nil
 
     public static func current(cwd: String? = nil) throws -> Context {
         let root = try Git.root(cwd: cwd)
@@ -49,14 +52,18 @@ public struct Context {
         let repo = (try? Git.repoName(cwd: root)) ?? (root as NSString).lastPathComponent
         let branch = (try? Git.currentBranch(cwd: root)) ?? "detached"
         let config = ConfigStore.load().repos[main] ?? RepoConfig()
-        return Context(root: root, mainRoot: main, repo: repo, branch: branch, config: config)
+        return Context(root: root, mainRoot: main, repo: repo, branch: branch, config: config,
+                       defaultBranch: Git.defaultBranch(cwd: main))
     }
 
     public var sessionDir: String { Paths.session(repo: repo, branch: branch) }
 
+    /// The branch stacks start from: `proof init --trunk`, else the repo's default branch, else "main".
+    public var trunk: String { config.trunk ?? defaultBranch ?? "main" }
+
     /// Same repo and config, different checkout/branch (stack worktree runs).
     public func with(branch: String, root: String) -> Context {
-        Context(root: root, mainRoot: mainRoot, repo: repo, branch: branch, config: config)
+        Context(root: root, mainRoot: mainRoot, repo: repo, branch: branch, config: config, defaultBranch: defaultBranch)
     }
 
     /// xcodebuild container arguments (-workspace / -project), resolved against `root`.

@@ -14,7 +14,7 @@ struct Proof: ParsableCommand {
           proof run                   build, install, launch on the simulator
           proof ui tree               what is on screen (accessibility tree)
           proof ui tap --id login     interact
-          proof snap login --compare main
+          proof snap login --compare base
           proof record start / stop login     turn what you did into a flow
           proof flow run login --stack        replay it on every branch
           proof packet --open         review screenshots and diffs, not the diff
@@ -90,7 +90,7 @@ struct Init: ParsableCommand {
     @Option(help: "Test plan name.") var testPlan: String?
     @Option(help: "Simulator name or UDID, e.g. \"iPhone 16\".") var simulator: String?
     @Option(help: "Bundle identifier of the app under test.") var bundleId: String?
-    @Option(help: "Base branch of your stacks (default main).") var trunk: String?
+    @Option(help: "Branch your stacks start from (default: the repo's default branch, e.g. main or develop).") var trunk: String?
     @Option(help: "Shell command to run in a checkout before building, e.g. \"tuist generate\".") var prepare: String?
     @Flag(help: "Print the current config only.") var show = false
     @Flag(help: "Remove this repo from proof (keeps its sessions and flows).") var forget = false
@@ -125,7 +125,7 @@ struct Init: ParsableCommand {
             "test plan  \(c.testPlan ?? "scheme default")",
             "simulator  \(c.simulator ?? "first booted")",
             "bundle id  \(c.bundleId ?? "detected on first `proof run`")",
-            "trunk      \(c.trunkBranch)",
+            "trunk      \(c.trunk ?? "\(ctx.defaultBranch ?? "main") (repo default)")",
         ] + (c.prepare.map { ["prepare    \($0)"] } ?? [])
         try finish(MessageReport(lines.joined(separator: "\n")), g)
     }
@@ -265,7 +265,7 @@ struct Snap: ParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Screenshot + accessibility tree of the current screen, saved for the packet.")
     @OptionGroup var g: Global
     @Argument(help: "Screen name, e.g. login or settings-empty.") var name: String
-    @Option(help: "Diff the tree against the same-named snap from another branch, e.g. main.") var compare: String?
+    @Option(help: "Diff the tree against the same-named snap of a branch: a name like main or develop, or \"base\" for the branch this PR targets.") var compare: String?
 
     func run() throws {
         try performStep(["snap", name] + (compare.map { ["--compare", $0] } ?? []), g)

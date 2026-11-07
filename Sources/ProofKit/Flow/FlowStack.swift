@@ -62,7 +62,8 @@ public enum FlowStack {
         let sim = try Simulators.resolveBooted(ctx.config.simulator)
 
         var runs: [BranchFlowRun] = []
-        var previous: String? = ctx.config.trunkBranch
+        // The first branch is compared with the branch its PR targets: the trunk, or a release branch.
+        var previous: String? = planned.base
         for (i, branch) in branches.enumerated() {
             if Interrupt.isRequested { break }
             Output.stderr("[\(i + 1)/\(branches.count)] \(branch)")
@@ -96,7 +97,7 @@ public enum FlowStack {
             let base = previous.flatMap { p in Snaps.load(sessionDir: Paths.session(repo: ctx.repo, branch: p)).isEmpty ? nil : p }
             var o = options
             o.relaunch = true
-            o.compareWith = options.compareWith ?? base
+            o.compareWith = BaseBranch.resolve(options.compareWith, ctx: bctx) ?? base
             var bctxWithId = bctx
             if bctxWithId.config.bundleId == nil { bctxWithId.config.bundleId = product.bundleId }
             let report = try FlowEngine.run(flow, ctx: bctxWithId, options: o)
