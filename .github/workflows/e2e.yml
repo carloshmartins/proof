@@ -1,0 +1,41 @@
+name: E2E
+
+# Runs proof against the Tempo demo app on a real iOS Simulator: build, test, the stack, the runner, snaps
+# and the report. Slower than unit tests, so only when proof's behaviour can change.
+on:
+  push:
+    branches: [main]
+    paths: ["Sources/**", "Runner/**", "Examples/**", "Package.*", ".github/workflows/e2e.yml"]
+  pull_request:
+    paths: ["Sources/**", "Runner/**", "Examples/**", "Package.*", ".github/workflows/e2e.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install xcodegen
+        run: brew install xcodegen
+      - name: Run proof against the Tempo demo
+        env:
+          E2E_WORK: ${{ runner.temp }}/e2e
+        run: Examples/Tempo/e2e.sh
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs
+          path: |
+            ${{ runner.temp }}/e2e/home/runner/runner.log
+            ${{ runner.temp }}/e2e/home/sessions/**/*.log
+            ${{ runner.temp }}/e2e/stack.json
+          if-no-files-found: ignore
