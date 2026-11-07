@@ -7,7 +7,9 @@ Start with `proof doctor`. It checks Xcode, the simulator, the runner, `gh` and 
 
 | Problem | Try |
 |---|---|
-| `proof: command not found` | Check `~/.local/bin` is on your `PATH`, or run `make install` again. |
+| `proof: command not found` | Homebrew: `brew install carloshmartins/tap/proof`. From source: check `~/.local/bin` is on your `PATH`. |
+| The agent doesn't use proof | Run `proof setup` (or `proof setup --skill-dir <your agent's skills folder>/proof`) and start a new agent session. |
+| "runner sources and skill not found" after `brew install` | `brew reinstall proof`, then `proof setup`. |
 | "not inside a git repository" | Run proof from inside your app's git repository. |
 | "no scheme is configured" | `proof init --scheme <Scheme> --simulator "<Device>"` |
 | "no stack found" | The branch needs an open PR (`gh pr create`), or pass `--branches a,b,c`. |

@@ -46,3 +46,17 @@ works. `proof` is a small command-line tool that gives them, and you, the eviden
 		No SDK, no test target, no code in your app. Everything proof writes goes to `~/.proof`.
 	</Card>
 </CardGrid>
+
+## Quick start
+
+```sh
+brew install carloshmartins/tap/proof    # 1. install
+proof setup                              # 2. teach your agent to use it (installs the skill)
+cd path/to/YourApp                       # 3. once per app
+proof init --scheme YourApp --simulator "iPhone 16"
+proof build                              # 4. try it
+```
+
+Then ask your coding agent for a change. It builds, tests and checks the screen with proof, and ends with a
+report you can open with `proof packet --open`. More in [Install](start/install/) and
+[Set up your app](start/setup/).
