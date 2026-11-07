@@ -1,0 +1,30 @@
+{
+  "comments" : [
+
+  ],
+  "number" : 42,
+  "resolvedHidden" : 1,
+  "reviews" : [
+    {
+      "author" : "reviewer",
+      "body" : "Close, a couple of things.",
+      "state" : "CHANGES_REQUESTED"
+    }
+  ],
+  "threads" : [
+    {
+      "comments" : [
+        {
+          "author" : "reviewer",
+          "body" : "Add an accessibility identifier here."
+        }
+      ],
+      "line" : 23,
+      "outdated" : false,
+      "path" : "Modules/Timer/Sources/PresetsView.swift",
+      "resolved" : false
+    }
+  ],
+  "title" : "Add timer presets",
+  "url" : "https://github.com/example/tempo/pull/42"
+}

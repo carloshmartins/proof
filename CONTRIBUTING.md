@@ -43,6 +43,17 @@ See [AGENTS.md](AGENTS.md) for the repository map. In short:
   paths, names and anything private from it first.
 - `swift test` must pass on Linux and macOS. Run it locally before opening a pull request.
 
+## Documentation
+
+The site in `docs/` is published at https://carloshmartins.github.io/proof. Guides are hand-written
+Markdown in `docs/src/content/docs/`. The command reference and the JSON output page are generated from
+the code:
+
+```sh
+make docs-reference   # regenerate after changing a command, an option or a --json report
+make docs             # preview the site at http://localhost:4321/proof/
+```
+
 ## Xcode projects
 
 `Runner/` has a hand-maintained project file. When you add a source file, add its file

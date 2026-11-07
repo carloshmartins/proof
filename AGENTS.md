@@ -30,4 +30,7 @@ make install                       # CLI → ~/.local/bin, runner sources, skill
 - `Runner/` is a hand-edited Xcode project: adding a source file means adding its PBXFileReference,
   PBXBuildFile, group child and Sources phase entry. Use fresh 24-hex IDs.
 - A user-facing change updates the docs page that describes it (`docs/src/content/docs/`).
+- Changing a command, an option, its help text or a `--json` report? Run `make docs-reference` and commit
+  the result. `docs/src/content/docs/reference/commands/` and `json-output.md` are generated; CI fails if
+  they're stale. New report types get an example in `Tests/ProofKitTests/DocExamplesTests.swift`.
 - Releases: update `CHANGELOG.md`, bump `version` in `Sources/proof/Proof.swift`, tag `X.Y.Z`.

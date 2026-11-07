@@ -41,6 +41,8 @@ export default defineConfig({
 					label: 'Reference',
 					items: [
 						{ label: 'Conventions', slug: 'reference/conventions' },
+						{ label: 'JSON output', slug: 'reference/json-output' },
+						{ label: 'Commands', items: [{ autogenerate: { directory: 'reference/commands' } }] },
 						{ label: 'How it works', slug: 'reference/how-it-works' },
 						{ label: 'Troubleshooting', slug: 'reference/troubleshooting' },
 					],

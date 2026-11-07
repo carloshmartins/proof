@@ -17,6 +17,9 @@ proof build --json
 proof test --stack --json
 ```
 
+Every shape, field by field with examples, is on the [JSON output](../json-output/) page. Each
+[command page](../commands/build/) says which shape it prints.
+
 ## Exit codes
 
 | Code | Meaning |
