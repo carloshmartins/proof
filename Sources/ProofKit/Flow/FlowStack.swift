@@ -49,6 +49,40 @@ public struct StackFlowReport: Report, Codable {
 /// relaunch, run. Each branch's snaps are compared with the branch below it (trunk for the first,
 /// when trunk has snaps), so you see exactly which PR changed which screen.
 public enum FlowStack {
+    /// A branch checked out in the stack worktree, built, and (when the build succeeded) installed.
+    public struct PreparedBranch {
+        public let ctx: Context
+        public let sha: String
+        public let build: BriefResult
+        public let product: XcodeBuild.AppProduct?
+    }
+
+    /// Checks `branch` out in the stack worktree, runs the repo's prepare command, builds it with the
+    /// worktree's own DerivedData, and installs the app on the simulator when the build succeeds.
+    public static func checkoutAndInstall(_ ctx: Context, branch: String, worktree wt: String, derivedData derived: String,
+                                          simulator udid: String, verbose: Bool) throws -> PreparedBranch {
+        let ref = try StackRunner.resolveRef(branch, cwd: wt)
+        try Shell.checked(["git", "checkout", "--detach", "--force", ref], cwd: wt)
+        if Paths.exists(Paths.join(wt, ".gitmodules")) {
+            try Shell.checked(["git", "submodule", "update", "--init", "--recursive"], cwd: wt)
+        }
+        if let prepare = ctx.config.prepare {
+            let r = try Shell.run(["sh", "-c", prepare], cwd: wt)
+            guard r.ok else { throw ProofError.commandFailed(prepare, r) }
+        }
+        let bctx = ctx.with(branch: branch, root: wt)
+        let sha = (try? Git.shortSHA(cwd: wt)) ?? "?"
+        var b = BuildOptions()
+        b.root = wt
+        b.derivedData = derived
+        b.verbose = verbose
+        let (build, _) = try XcodeBuild.run(bctx, b)
+        guard build.succeeded else { return PreparedBranch(ctx: bctx, sha: sha, build: build, product: nil) }
+        let product = try XcodeBuild.appProduct(bctx, derivedData: derived)
+        try Shell.checked(["xcrun", "simctl", "install", udid, product.path])
+        return PreparedBranch(ctx: bctx, sha: sha, build: build, product: product)
+    }
+
     public static func run(_ ctx: Context, flowName: String, stack: StackOptions, options: FlowRunOptions) throws -> StackFlowReport {
         let flow = try Flow.load(flowName, repo: ctx.repo)
         let planned = try StackRunner.plan(ctx, explicit: stack.branches)
@@ -67,31 +101,15 @@ public enum FlowStack {
         for (i, branch) in branches.enumerated() {
             if Interrupt.isRequested { break }
             Output.stderr("[\(i + 1)/\(branches.count)] \(branch)")
-            let ref = try StackRunner.resolveRef(branch, cwd: wt)
-            try Shell.checked(["git", "checkout", "--detach", "--force", ref], cwd: wt)
-            if Paths.exists(Paths.join(wt, ".gitmodules")) {
-                try Shell.checked(["git", "submodule", "update", "--init", "--recursive"], cwd: wt)
-            }
-            if let prepare = ctx.config.prepare {
-                let r = try Shell.run(["sh", "-c", prepare], cwd: wt)
-                guard r.ok else { throw ProofError.commandFailed(prepare, r) }
-            }
-            let bctx = ctx.with(branch: branch, root: wt)
-            let sha = (try? Git.shortSHA(cwd: wt)) ?? "?"
-
-            var b = BuildOptions()
-            b.root = wt
-            b.derivedData = derived
-            b.verbose = stack.verbose
-            let (build, _) = try XcodeBuild.run(bctx, b)
-            guard build.succeeded else {
-                runs.append(BranchFlowRun(branch: branch, sha: sha, build: "failed", buildErrors: build.errors, pr: planned.prs[branch]))
+            let prepared = try checkoutAndInstall(ctx, branch: branch, worktree: wt, derivedData: derived,
+                                                  simulator: sim.udid, verbose: stack.verbose)
+            let bctx = prepared.ctx, sha = prepared.sha
+            guard let product = prepared.product else {
+                runs.append(BranchFlowRun(branch: branch, sha: sha, build: "failed", buildErrors: prepared.build.errors, pr: planned.prs[branch]))
                 if stack.stopOnFail { break }
                 previous = branch
                 continue
             }
-            let product = try XcodeBuild.appProduct(bctx, derivedData: derived)
-            try Shell.checked(["xcrun", "simctl", "install", sim.udid, product.path])
 
             // Compare with the branch below only if it produced snaps (trunk usually has none until you snap it).
             let base = previous.flatMap { p in Snaps.load(sessionDir: Paths.session(repo: ctx.repo, branch: p)).isEmpty ? nil : p }

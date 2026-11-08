@@ -32,7 +32,7 @@ snap home
 Replay a flow on this branch, or on every branch of the stack with --stack.
 
 ```sh
-proof flow run [--json] <flow> [--var <var> ...] [--continue] [--compare <compare>] [--video] [--relaunch] [--stack] [--branches <branches>] [--from <from>] [--stop-on-fail] [--verbose]
+proof flow run [--json] <flow> [--var <var> ...] [--continue] [--compare <compare>] [--video] [--relaunch] [--stack] [--branches <branches>] [--from <from>] [--stop-on-fail] [--verbose] [--fresh-baseline] [--no-baseline]
 ```
 
 | Argument | Description |
@@ -48,6 +48,8 @@ proof flow run [--json] <flow> [--var <var> ...] [--continue] [--compare <compar
 | `--from <from>` | Start the stack run at this branch. |
 | `--stop-on-fail` | Stop at the first failing branch. |
 | `--verbose` | Stream raw xcodebuild output to stderr (stack builds). |
+| `--fresh-baseline` | With --compare: replay the flow on the compared branch first even if its snaps exist. |
+| `--no-baseline` | With --compare: never replay the flow on the compared branch; compare with the snaps it has. |
 
 **JSON output** (`--json`):
 

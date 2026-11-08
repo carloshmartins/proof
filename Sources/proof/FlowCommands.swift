@@ -96,10 +96,13 @@ struct FlowCommand: ParsableCommand {
         @Option(help: "Start the stack run at this branch.") var from: String?
         @Flag(help: "Stop at the first failing branch.") var stopOnFail = false
         @Flag(help: "Stream raw xcodebuild output to stderr (stack builds).") var verbose = false
+        @Flag(help: "With --compare: replay the flow on the compared branch first even if its snaps exist.") var freshBaseline = false
+        @Flag(help: "With --compare: never replay the flow on the compared branch; compare with the snaps it has.") var noBaseline = false
 
         func run() throws {
-            let ctx = try Context.current()
+            var ctx = try Context.current()
             track(ctx)
+            if freshBaseline && noBaseline { throw ValidationError("--fresh-baseline and --no-baseline can't be used together") }
             var o = FlowRunOptions()
             for v in vars {
                 let p = v.split(separator: "=", maxSplits: 1).map(String.init)
@@ -117,7 +120,15 @@ struct FlowCommand: ParsableCommand {
                 let report = try FlowStack.run(ctx, flowName: flow, stack: s, options: o)
                 try finish(report, g, failed: !report.ok)
             } else {
-                let report = try FlowEngine.run(try Flow.load(flow, repo: ctx.repo), ctx: ctx, options: o)
+                let loaded = try Flow.load(flow, repo: ctx.repo)
+                // Before and after in one command: if the compared branch lacks this flow's snaps, take them there first.
+                if let base = BaseBranch.resolve(compare, ctx: ctx), !noBaseline,
+                   Baseline.isNeeded(loaded, base: base, current: ctx.branch, repo: ctx.repo, vars: o.vars, fresh: freshBaseline) {
+                    try Baseline.capture(&ctx, flow: loaded, base: base, options: o, verbose: verbose)
+                    o.compareWith = base
+                    o.relaunch = true
+                }
+                let report = try FlowEngine.run(loaded, ctx: ctx, options: o)
                 try finish(report, g, failed: !report.ok)
             }
         }

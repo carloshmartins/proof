@@ -45,6 +45,8 @@ proof flow show login
 proof flow check login --var EMAIL=a@b.c       # validate without running
 proof flow run login --var EMAIL=a@b.c
 proof flow run login --compare base            # diff every snap against the PR's base branch
+                                               # (replays the flow there first if it has no snaps yet)
+proof flow run login --compare base --fresh-baseline   # replay it on the base branch again
 proof flow run login --video                   # record the screen while it runs
 proof flow run login --continue                # keep going after a failed step
 proof flow run login --stack                   # every branch of the stack

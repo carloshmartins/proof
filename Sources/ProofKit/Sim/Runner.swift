@@ -8,6 +8,8 @@ public struct RunnerState: Codable {
     public let port: Int
     public let udid: String
     public let sourceStamp: String
+    /// Random per start; the runner echoes it on /health. Nil for runners started by older versions.
+    public var session: String? = nil
 }
 
 /// Lifecycle of the standalone XCUITest runner: build once, start in the background,
@@ -67,16 +69,44 @@ public enum Runner {
 
     public static func state() -> RunnerState? { Output.readJSON(RunnerState.self, from: Paths.runnerState) }
 
-    public static func isHealthy() -> Bool {
-        (try? request("/health", [:], timeout: 2))?["ok"] as? Bool == true
+    /// Whether a runner answers on the port. With `session`, only the runner started with that session counts.
+    public static func isHealthy(session: String? = nil) -> Bool {
+        guard let response = try? request("/health", [:], timeout: 2) else { return false }
+        return healthMatches(response, session: session)
+    }
+
+    /// A /health response counts when it says ok and, if a session is expected, carries that session.
+    static func healthMatches(_ response: [String: Any], session: String?) -> Bool {
+        guard response["ok"] as? Bool == true else { return false }
+        guard let session else { return true }
+        return response["session"] as? String == session
+    }
+
+    /// How long to wait before retrying a request that failed to connect, or nil to give up. Only right
+    /// after a start (a runner that has been up never gets a command twice), at most 4 times.
+    static func retryDelay(for error: Error, attempt: Int, sinceStart: TimeInterval?) -> TimeInterval? {
+        guard let sinceStart, sinceStart < 20, attempt < 4,
+              let error = error as? URLError,
+              [.networkConnectionLost, .cannotConnectToHost, .timedOut].contains(error.code) else { return nil }
+        return 0.5 * Double(attempt + 1)
+    }
+
+    /// Asks whatever answers on the port to shut down, and waits up to `timeout` for the port to go quiet.
+    static func clearPort(timeout: TimeInterval = 8) {
+        guard isHealthy() else { return }
+        _ = try? request("/shutdown", [:], timeout: 2)
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline, isHealthy() { Thread.sleep(forTimeInterval: 0.25) }
     }
 
     /// Starts the runner on the given simulator if it is not already serving there.
     @discardableResult
     public static func ensureRunning(simulator: String?) throws -> RunnerState {
         let sim = try Simulators.resolveBooted(simulator)
-        if let s = state(), s.udid == sim.udid, isHealthy() { return s }
+        let session = UUID().uuidString
+        if let s = state(), s.udid == sim.udid, isHealthy(session: s.session) { return s }
         if state() != nil { stop() }
+        clearPort()   // a runner still shutting down (or one from another PROOF_HOME) would answer our health checks
         try buildIfNeeded()
         guard let xctestrun = xctestrun() else { throw ProofError.message("runner .xctestrun not found after build") }
 
@@ -84,15 +114,16 @@ public enum Runner {
             ["xcodebuild", "test-without-building", "-xctestrun", xctestrun,
              "-destination", Simulators.destination(sim),
              "-only-testing:ProofRunnerUITests/RunnerTests/testServe"],
-            env: ["TEST_RUNNER_PROOF_PORT": String(port)],   // xcodebuild forwards TEST_RUNNER_* to the test process
+            // xcodebuild forwards TEST_RUNNER_* to the test process.
+            env: ["TEST_RUNNER_PROOF_PORT": String(port), "TEST_RUNNER_PROOF_SESSION": session],
             log: Paths.runnerLog
         )
-        let state = RunnerState(pid: pid, port: port, udid: sim.udid, sourceStamp: sourceStamp())
+        let state = RunnerState(pid: pid, port: port, udid: sim.udid, sourceStamp: sourceStamp(), session: session)
         try Output.writeJSON(state, to: Paths.runnerState)
 
         let deadline = Date().addingTimeInterval(120)
         while Date() < deadline {
-            if isHealthy() { startedAt = Date(); return state }
+            if isHealthy(session: session) { startedAt = Date(); return state }
             if !Shell.isAlive(pid) {
                 let tail = ((try? String(contentsOfFile: Paths.runnerLog, encoding: .utf8)) ?? "")
                     .split(separator: "\n").suffix(20).joined(separator: "\n")
@@ -109,7 +140,8 @@ public enum Runner {
     public static func stop() {
         _ = try? request("/shutdown", [:], timeout: 2)
         if let s = state() {
-            Thread.sleep(forTimeInterval: 1)
+            let deadline = Date().addingTimeInterval(5)
+            while Date() < deadline, Shell.isAlive(s.pid) { Thread.sleep(forTimeInterval: 0.25) }
             if Shell.isAlive(s.pid) { kill(s.pid, SIGTERM) }
         }
         try? FileManager.default.removeItem(atPath: Paths.runnerState)
@@ -143,15 +175,19 @@ public enum Runner {
     /// Sends a command, starting the runner if needed. Throws on `ok: false`.
     public static func command(_ path: String, _ body: [String: Any], simulator: String?) throws -> [String: Any] {
         try ensureRunning(simulator: simulator)
-        let response: [String: Any]
-        do {
-            response = try request(path, body)
-        } catch let error as URLError where startedAt.map({ Date().timeIntervalSince($0) < 15 }) == true
-                    && [.networkConnectionLost, .cannotConnectToHost].contains(error.code) {
-            // A runner that just answered /health can still drop the first connection while it settles.
-            // Only right after a start, so a command is never sent twice to a runner that has been up.
-            Thread.sleep(forTimeInterval: 1)
-            response = try request(path, body)
+        var attempt = 0
+        var response: [String: Any]
+        while true {
+            do {
+                response = try request(path, body)
+                break
+            } catch {
+                // A runner that just answered /health can still drop the first connections while it settles.
+                guard let delay = retryDelay(for: error, attempt: attempt,
+                                             sinceStart: startedAt.map { Date().timeIntervalSince($0) }) else { throw error }
+                attempt += 1
+                Thread.sleep(forTimeInterval: delay)
+            }
         }
         if response["ok"] as? Bool == false {
             throw ProofError.message((response["error"] as? String) ?? "runner command failed")

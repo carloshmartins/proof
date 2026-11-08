@@ -16,6 +16,7 @@
 
 ```sh
 swift build && swift test          # CLI + ProofKit (also runs on Linux)
+Examples/Tempo/e2e.sh              # end to end on a real simulator (needs xcodegen)
 make install                       # CLI → ~/.local/bin, runner sources, skill
 ```
 

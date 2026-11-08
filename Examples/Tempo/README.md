@@ -18,11 +18,21 @@ proof init --scheme Tempo --simulator "iPhone 17 Pro"
 proof test --stack --branches feat/models,feat/presets,feat/presets-ui
 ```
 
+## End-to-end check
+
+```sh
+Examples/Tempo/e2e.sh [simulator name]
+```
+
+Builds proof and runs it against the demo on a real simulator: build, test, the stack (the failure must be
+marked on `feat/presets`), the runner (including a restart), snaps with a diff, tap, expect, and the report.
+CI runs it on every pull request that changes `Sources/`, `Runner/` or `Examples/` (`.github/workflows/e2e.yml`).
+
 ## Recording the media
 
 ```sh
 brew install xcodegen vhs gifsicle     # vhs brings ffmpeg; also needs Google Chrome
-make demo-media                        # → docs/public/media/{stack.gif,snap.gif,report.png}
+make demo-media                        # → assets/{stack.gif,snap.gif,report.png}
 ```
 
 `record.sh` builds proof, creates the demo repository, boots a clean "Tempo Demo" simulator (status bar
