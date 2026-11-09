@@ -23,6 +23,10 @@ tree diff vs develop:
 ![proof snap --compare base in a terminal](/proof/media/snap.gif)
 
 - Lines starting with `-` disappeared, lines starting with `+` are new.
+- The screenshots are compared too, pixel by pixel, because the tree doesn't see colours, images or
+  layout: `pixels: 0.4% changed (box 514,1469 294x48)`, and a `<name>.diff.png` with the changes in red over
+  a faded copy of the screen, shown in the report next to before and after. The status bar is left out
+  (its clock changes), and so are tiny colour shifts. Screenshots of different sizes aren't compared.
 - `--compare base` means the branch this branch's PR targets. See
   [Branches](../branches/) for how it's chosen.
 - Snapping a name again replaces it, so a snap always shows the latest state of that screen.

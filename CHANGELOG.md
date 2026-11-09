@@ -42,6 +42,9 @@ and the layout of `~/.proof`.
 - `proof test --coverage` reports how many of the lines the branch changed the tests run, against the PR's
   base (`--compare` for another branch), and lists the untested ones per file. Uncommitted changes and new
   files count; test files don't.
+- Pixel diff: a snap compared with another branch also compares the screenshots, so colour, image and
+  layout changes the accessibility tree can't see show up: the share of pixels changed, the box around
+  them, and `<name>.diff.png` with the changes in red, in the report next to before and after.
 - Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
   first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.
