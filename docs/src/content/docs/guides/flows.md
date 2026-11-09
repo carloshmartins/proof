@@ -21,8 +21,8 @@ Flows live in `~/.proof/flows/<repo>/<name>.flow`, outside your repository.
 
 ## Steps
 
-Every `proof ui` command works as a step (`tap`, `type`, `swipe`, `wait`, `expect`, `alert`, `launch`…),
-plus:
+Every `proof ui` command works as a step (`tap`, `type`, `swipe`, `wait`, `expect`, `alert`, `launch`, `open`,
+`push`, `permission`, `location`…), plus:
 
 | Step | What it does |
 |---|---|

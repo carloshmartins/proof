@@ -15,7 +15,7 @@ proof ui <subcommand>
 
 Every action command is also a flow step: while `proof record` is on, it is recorded.
 
-**Subcommands:** [`start`](#proof-ui-start) · [`stop`](#proof-ui-stop) · [`status`](#proof-ui-status) · [`launch`](#proof-ui-launch) · [`attach`](#proof-ui-attach) · [`terminate`](#proof-ui-terminate) · [`tree`](#proof-ui-tree) · [`at`](#proof-ui-at) · [`tap`](#proof-ui-tap) · [`longpress`](#proof-ui-longpress) · [`type`](#proof-ui-type) · [`swipe`](#proof-ui-swipe) · [`wait`](#proof-ui-wait) · [`expect`](#proof-ui-expect) · [`home`](#proof-ui-home) · [`alert`](#proof-ui-alert)
+**Subcommands:** [`start`](#proof-ui-start) · [`stop`](#proof-ui-stop) · [`status`](#proof-ui-status) · [`launch`](#proof-ui-launch) · [`attach`](#proof-ui-attach) · [`terminate`](#proof-ui-terminate) · [`tree`](#proof-ui-tree) · [`at`](#proof-ui-at) · [`tap`](#proof-ui-tap) · [`longpress`](#proof-ui-longpress) · [`type`](#proof-ui-type) · [`swipe`](#proof-ui-swipe) · [`wait`](#proof-ui-wait) · [`expect`](#proof-ui-expect) · [`home`](#proof-ui-home) · [`alert`](#proof-ui-alert) · [`open`](#proof-ui-open) · [`push`](#proof-ui-push) · [`permission`](#proof-ui-permission) · [`location`](#proof-ui-location)
 
 ## proof ui start
 
@@ -286,6 +286,82 @@ proof ui alert [--json] [--button <button>] [--dismiss]
 |---|---|
 | `--button <button>` | Exact button label to tap. |
 | `--dismiss` | Tap the first (cancel) button instead of the last. |
+
+**JSON output** (`--json`):
+
+- [`MessageReport`](../../json-output/#messagereport)
+
+## proof ui open
+
+Open a URL on the simulator: a deep link or universal link.
+
+```sh
+proof ui open [--json] <url>
+```
+
+| Argument | Description |
+|---|---|
+| `<url>` | The URL, e.g. tempo://presets/new. **Required.** |
+
+**JSON output** (`--json`):
+
+- [`MessageReport`](../../json-output/#messagereport)
+
+## proof ui push
+
+Send a push notification to the app under test.
+
+```sh
+proof ui push [--json] [--title <title>] [--body <body>] [--badge <badge>] [--sound <sound>] [--payload <payload>] [--bundle-id <bundle-id>]
+```
+
+Build it from --title, --body, --badge and --sound, or pass a full APNs payload with --payload.
+
+| Argument | Description |
+|---|---|
+| `--title <title>` |  |
+| `--body <body>` |  |
+| `--badge <badge>` |  |
+| `--sound <sound>` |  |
+| `--payload <payload>` | JSON file with an "aps" key; other keys reach the app as custom data. |
+| `--bundle-id <bundle-id>` | Bundle id; defaults to the configured one. |
+
+**JSON output** (`--json`):
+
+- [`MessageReport`](../../json-output/#messagereport)
+
+## proof ui permission
+
+Grant, revoke or reset a privacy permission for the app under test.
+
+```sh
+proof ui permission [--json] <verb> <service> [--bundle-id <bundle-id>]
+```
+
+Services: all, calendar, contacts-limited, contacts, location, location-always, photos-add, photos, media-library, microphone, motion, reminders, siri. Revoking may terminate the app.
+
+| Argument | Description |
+|---|---|
+| `<verb>` | grant \| revoke \| reset **Required.** |
+| `<service>` | The service, e.g. photos, location, contacts, microphone. **Required.** |
+| `--bundle-id <bundle-id>` | Bundle id; defaults to the configured one. |
+
+**JSON output** (`--json`):
+
+- [`MessageReport`](../../json-output/#messagereport)
+
+## proof ui location
+
+Set the simulated location (latitude,longitude), or clear it.
+
+```sh
+proof ui location [--json] [<coordinate>] [--clear]
+```
+
+| Argument | Description |
+|---|---|
+| `<coordinate>` | latitude,longitude, e.g. 51.5072,-0.1276 |
+| `--clear` | Stop simulating a location. |
 
 **JSON output** (`--json`):
 

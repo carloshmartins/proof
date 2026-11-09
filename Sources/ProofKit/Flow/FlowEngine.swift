@@ -82,6 +82,8 @@ public enum FlowEngine {
             return Outcome(detail: "slept \(seconds)s", file: nil)
         case "include":
             throw ProofError.message("include is only valid inside a .flow file")
+        case _ where FlowStep.simulatorActions.contains(step.action):
+            return Outcome(detail: try SimState.perform(step, ctx: ctx), file: nil)
         case "wait", "expect":
             guard let (path, body) = try step.runnerRequest(defaultBundleId: ctx.config.bundleId) else { break }
             try Runner.ensureRunning(simulator: ctx.config.simulator)

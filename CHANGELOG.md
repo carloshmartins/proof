@@ -8,6 +8,10 @@ and the layout of `~/.proof`.
 ## [Unreleased]
 
 ### Added
+- Simulator state, as `proof ui` commands and flow steps: `open <url>` for deep links, `push` for
+  notifications (`--title`, `--body`, `--badge`, `--sound` or a `--payload` file), `permission grant|revoke|reset
+  <service>` and `location <lat,lon>` / `--clear`. They run with `simctl` on the configured simulator, and
+  `proof flow check` validates them.
 - Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
   first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.

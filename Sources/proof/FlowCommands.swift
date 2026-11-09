@@ -166,7 +166,12 @@ struct FlowCommand: ParsableCommand {
             for pair in vars { let p = pair.split(separator: "=", maxSplits: 1).map(String.init); if p.count == 2 { v[p[0]] = p[1] } }
             var problems: [String] = []
             for s in f.steps {
-                do { _ = try s.substituting(v).runnerRequest(defaultBundleId: ctx.config.bundleId ?? "check.bundle") }
+                do {
+                    let step = try s.substituting(v)
+                    let bundle = ctx.config.bundleId ?? "check.bundle"
+                    if FlowStep.simulatorActions.contains(step.action) { _ = try SimState.command(for: step, udid: "check", bundleId: bundle) }
+                    else { _ = try step.runnerRequest(defaultBundleId: bundle) }
+                }
                 catch {
                     let msg = "\(error)"
                     problems.append(msg.hasPrefix("line ") ? msg : "line \(s.sourceLine ?? 0): \(msg)")

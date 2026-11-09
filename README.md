@@ -201,6 +201,7 @@ proof ui swipe up
 proof ui wait --id home.title --timeout 15
 proof ui expect --id home.title         # an assertion: exit 1 if it's not there
 proof ui alert                          # accept a system alert (--dismiss, --button "Allow")
+proof ui open tempo://presets/new       # a deep link; also push, permission, location
 ```
 
 Elements without an identifier are hard to target reliably. `proof ax scan` lists the controls in your
@@ -347,6 +348,7 @@ Every command prints short text by default, accepts `--json` for scripts, and ex
 | `proof brief` | Condense `xcodebuild` output from stdin |
 | `proof run` | Build, install and launch on the simulator |
 | `proof ui tree / tap / type / swipe / wait / expect / alert / at / launch / home` | Drive the simulator |
+| `proof ui open / push / permission / location` | Deep links, notifications, permissions, location |
 | `proof snap <name>` | Screenshot + accessibility tree (`--compare base` or a branch name) |
 | `proof record start / stop <name>` | Record `proof ui` steps into a flow |
 | `proof flow list / show / check / run` | Manage and replay flows |
