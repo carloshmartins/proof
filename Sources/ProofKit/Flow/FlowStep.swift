@@ -22,8 +22,11 @@ public struct FlowStep: Equatable, Codable {
 
     public static let actions: Set<String> = [
         "launch", "attach", "terminate", "home", "tap", "longpress", "type", "swipe", "wait",
-        "alert", "expect", "snap", "sleep", "include",
+        "alert", "expect", "snap", "sleep", "include", "open", "push", "permission", "location",
     ]
+
+    /// Steps that change simulator state with simctl instead of going through the runner.
+    public static let simulatorActions: Set<String> = ["open", "push", "permission", "location"]
 
     public func option(_ name: String) -> String? { options.last(where: { $0.name == name })?.value }
     public func all(_ name: String) -> [String] { options.filter { $0.name == name }.map(\.value) }

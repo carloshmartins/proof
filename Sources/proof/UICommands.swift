@@ -58,7 +58,8 @@ struct UI: ParsableCommand {
         abstract: "Drive the iOS Simulator through the accessibility tree (no UI test target needed).",
         discussion: "Every action command is also a flow step: while `proof record` is on, it is recorded.",
         subcommands: [Start.self, Stop.self, Status.self, Launch.self, Attach.self, Terminate.self, Tree.self, At.self,
-                      Tap.self, LongPress.self, TypeText.self, Swipe.self, Wait.self, Expect.self, Home.self, Alert.self]
+                      Tap.self, LongPress.self, TypeText.self, Swipe.self, Wait.self, Expect.self, Home.self, Alert.self,
+                      Open.self, Push.self, Permission.self, Location.self]
     )
 
     struct Start: ParsableCommand {
@@ -260,6 +261,58 @@ struct UI: ParsableCommand {
         @Option(help: "Exact button label to tap.") var button: String?
         @Flag(help: "Tap the first (cancel) button instead of the last.") var dismiss = false
         func run() throws { try performStep(["alert"] + (button.map { ["--button", $0] } ?? []) + (dismiss ? ["--dismiss"] : []), g) }
+    }
+
+    struct Open: ParsableCommand {
+        static let configuration = CommandConfiguration(abstract: "Open a URL on the simulator: a deep link or universal link.")
+        @OptionGroup var g: Global
+        @Argument(help: "The URL, e.g. tempo://presets/new.") var url: String
+        func run() throws { try performStep(["open", url], g) }
+    }
+
+    struct Push: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            abstract: "Send a push notification to the app under test.",
+            discussion: "Build it from --title, --body, --badge and --sound, or pass a full APNs payload with --payload.")
+        @OptionGroup var g: Global
+        @Option var title: String?
+        @Option var body: String?
+        @Option var badge: Int?
+        @Option var sound: String?
+        @Option(help: "JSON file with an \"aps\" key; other keys reach the app as custom data.") var payload: String?
+        @Option(help: "Bundle id; defaults to the configured one.") var bundleId: String?
+        func run() throws {
+            var t = ["push"]
+            if let title { t += ["--title", title] }
+            if let body { t += ["--body", body] }
+            if let badge { t += ["--badge", String(badge)] }
+            if let sound { t += ["--sound", sound] }
+            if let payload { t += ["--payload", payload] }
+            if let bundleId { t += ["--bundle-id", bundleId] }
+            try performStep(t, g)
+        }
+    }
+
+    struct Permission: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            abstract: "Grant, revoke or reset a privacy permission for the app under test.",
+            discussion: "Services: \(SimState.services.joined(separator: ", ")). Revoking may terminate the app.")
+        @OptionGroup var g: Global
+        @Argument(help: "grant | revoke | reset") var verb: String
+        @Argument(help: "The service, e.g. photos, location, contacts, microphone.") var service: String
+        @Option(help: "Bundle id; defaults to the configured one.") var bundleId: String?
+        func run() throws { try performStep(["permission", verb, service] + (bundleId.map { ["--bundle-id", $0] } ?? []), g) }
+    }
+
+    struct Location: ParsableCommand {
+        static let configuration = CommandConfiguration(abstract: "Set the simulated location (latitude,longitude), or clear it.")
+        @OptionGroup var g: Global
+        @Argument(help: "latitude,longitude, e.g. 51.5072,-0.1276") var coordinate: String?
+        @Flag(help: "Stop simulating a location.") var clear = false
+        func run() throws {
+            guard clear || coordinate != nil else { throw ValidationError("give latitude,longitude or --clear") }
+            try performStep(clear ? ["location", "--clear"] : ["location", coordinate!], g)
+        }
     }
 }
 

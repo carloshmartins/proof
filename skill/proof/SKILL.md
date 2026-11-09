@@ -51,6 +51,10 @@ proof ui at 120 640              # which element is at that point, and the step 
 proof ui alert                   # accept system/in-app alert; --dismiss or --button "Allow"
 proof ui launch --arg -UITestMode
 proof ui home
+proof ui open tempo://presets/new                  # deep link
+proof ui push --title "Done" --body "Take a break" # push notification (or --payload file.json)
+proof ui permission grant photos                   # revoke | reset; location, contacts, microphone, …
+proof ui location 51.5072,-0.1276                  # or --clear
 ```
 
 The runner starts automatically on first use (the first time it builds for about a minute). If a tap

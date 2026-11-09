@@ -51,6 +51,24 @@ proof ui home                                  # go to the home screen
 proof ui launch --arg -UITestMode              # relaunch with launch arguments
 ```
 
+## Simulator state
+
+Features that start outside the app: deep links, notifications, permissions and location. These run on the
+simulator directly (no runner needed) and are flow steps too.
+
+```sh
+proof ui open tempo://presets/new              # deep link or universal link
+proof ui push --title "Timer done" --body "Take a break" --badge 1
+proof ui push --payload notification.json      # a full APNs payload (needs an "aps" key)
+proof ui permission grant photos               # also revoke, reset; location, contacts, microphone, …
+proof ui location 51.5072,-0.1276              # simulated location
+proof ui location --clear
+```
+
+`permission` takes the services `simctl privacy` knows: all, calendar, contacts-limited, contacts, location,
+location-always, photos-add, photos, media-library, microphone, motion, reminders, siri. The camera isn't one
+of them. Revoking a permission can terminate the app; `proof ui launch` starts it again.
+
 ## Wait and check
 
 ```sh
