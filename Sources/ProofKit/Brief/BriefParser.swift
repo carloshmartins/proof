@@ -13,6 +13,7 @@ public struct TestFailure: Codable, Hashable {
     public var file: String?
     public var line: Int?
     public var message: String?
+    public var attachments: [String]? = nil   // files the test attached (from the .xcresult)
 }
 
 /// A test that failed and then passed when retried (`proof test --retry`).
@@ -43,6 +44,7 @@ public struct BriefResult: Codable, Report {
     public var tests: TestSummary? = nil
     public var duration: Double? = nil
     public var tail: [String]? = nil          // raw tail when failed with nothing recognised
+    public var xcresult: String? = nil            // the result bundle the test results were read from
     public var newWarnings: [Diagnostic]? = nil   // warnings this branch adds compared with `warningsBase`
     public var warningsBase: String? = nil
 
@@ -87,6 +89,7 @@ public struct BriefResult: Codable, Report {
                 if let file = f.file { s += "  \((file as NSString).lastPathComponent)\(f.line.map { ":\($0)" } ?? "")" }
                 if let m = f.message { s += "  \(m)" }
                 out.append(s)
+                for a in f.attachments?.prefix(3) ?? [] { out.append("       attachment → \((a as NSString).abbreviatingWithTildeInPath)") }
             }
             if t.failures.count > maxItems { out.append("… +\(t.failures.count - maxItems) more failures") }
         }

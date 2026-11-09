@@ -36,6 +36,9 @@ and the layout of `~/.proof`.
 - `proof setup --agent codex|cursor|copilot|claude|all` installs the agent skill into each agent's personal
   skills folder (`~/.agents/skills`, `~/.cursor/skills`, `~/.copilot/skills`, `~/.claude/skills`), next to
   `--skill-dir` for any other agent.
+- `proof test` reads the test results from the `.xcresult` bundle (Xcode 16+): whole failure messages,
+  failing tests the log misses (a test that crashed), and the files failing tests attached, exported to
+  `results/test-attachments` and listed under the failure. One bundle per branch, replaced every run.
 - Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
   first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.

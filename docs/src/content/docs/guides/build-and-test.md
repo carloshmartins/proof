@@ -70,6 +70,21 @@ Swift Testing results are all understood.
 
 To test every branch of a stacked PR, see [Stacked pull requests](../stacks/).
 
+## Exact failures and attachments
+
+`proof test` also asks xcodebuild for a result bundle (`results/test.xcresult` in the branch's session, one
+per branch, replaced every run) and reads it with `xcresulttool` (Xcode 16 or newer). Failure messages come
+from it whole, a test that crashed is listed even when the log doesn't say which test it was, and files a
+failing test attached (UI test screenshots, logs) are exported next to the bundle:
+
+```
+FAIL   LoginUITests/testSignIn  LoginUITests.swift:31  XCTAssertTrue failed - Sign in button missing
+       attachment → ~/.proof/sessions/Tempo/feat_login/results/test-attachments/Screenshot_0_1C2D….png
+```
+
+When the bundle can't be read, the results from the log stand. If you pass your own `-resultBundlePath`,
+proof leaves it alone.
+
 ## Flaky tests
 
 A test that fails sometimes is a different problem from one that's broken. Give failing tests more tries:

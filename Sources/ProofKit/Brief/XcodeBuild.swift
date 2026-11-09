@@ -33,6 +33,15 @@ public enum XcodeBuild {
             args += opts.skipTesting.map { "-skip-testing:\($0)" }
             if let n = opts.retry, n > 1 { args += ["-retry-tests-on-failure", "-test-iterations", String(n)] }
         }
+        // Tests also write a result bundle: exact failures and attachments (XCResult). One per action, replaced.
+        let bundle = XCResult.bundlePath(sessionDir: ctx.sessionDir, action: opts.action)
+        let ownBundle = opts.action == "test" && !((ctx.config.extraBuildArgs ?? []) + opts.extra).contains("-resultBundlePath")
+        if ownBundle {
+            try? FileManager.default.removeItem(atPath: bundle)
+            try? FileManager.default.removeItem(atPath: bundle.replacingOccurrences(of: ".xcresult", with: "-attachments"))
+            try Paths.ensureDir(Paths.join(ctx.sessionDir, "results"))
+            args += ["-resultBundlePath", bundle]
+        }
         args += ctx.config.extraBuildArgs ?? []
         args += opts.extra
 
@@ -60,6 +69,7 @@ public enum XcodeBuild {
 
         var brief = BriefParser(root: root, keepWarnings: true).parse(r.combined, action: opts.action, duration: duration)
         if brief.status == "unknown" { brief.status = r.ok ? "succeeded" : "failed" }
+        if ownBundle { XCResult.read(bundle, into: &brief) }
         let fresh = brief.warnings ?? []
         if !opts.keepWarnings { brief.warnings = nil }
         if let all = Warnings.record(brief, allWarnings: fresh, log: r.combined, root: root, sessionDir: ctx.sessionDir),
