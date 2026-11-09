@@ -95,8 +95,12 @@ public struct BuildActivity: Equatable {
 /// Tells the person running proof that a long command is still working.
 ///
 /// On a terminal it keeps one live line on stderr: spinner, elapsed time and what xcodebuild is doing.
-/// Elsewhere (an agent, CI, a pipe) it prints a start line with `detail` and a short heartbeat every 15 seconds,
-/// so nothing redraws in place. stdout is never touched, so `--json` output stays clean.
+/// Elsewhere (an agent, CI, a pipe) nothing can redraw, and an agent reads everything printed, so it is one
+/// growing line: the title and `detail`, a dot every 15 seconds, then the elapsed time.
+///
+///     building Tempo on iPhone 16 (log: ~/.proof/…/build.log) ........ 2m04s
+///
+/// stdout is never touched, so `--json` output stays clean.
 public final class ProgressLine {
     public let title: String
     private let interactive: Bool
@@ -109,22 +113,24 @@ public final class ProgressLine {
     private var frame = 0
     private var lastBeat = Date()
     private var finished = false
+    private let write: (String) -> Void
 
     private static let frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
 
     /// Off when `PROOF_NO_PROGRESS` is set.
     public static var enabled: Bool { ProcessInfo.processInfo.environment["PROOF_NO_PROGRESS"] == nil }
 
-    public init(_ title: String, detail: String? = nil, interactive: Bool = isatty(STDERR_FILENO) == 1, heartbeat: TimeInterval = 15) {
+    public init(_ title: String, detail: String? = nil, interactive: Bool = isatty(STDERR_FILENO) == 1, heartbeat: TimeInterval = 15,
+                write: @escaping (String) -> Void = { FileHandle.standardError.write(Data($0.utf8)) }) {
         self.title = title
         self.interactive = interactive
         self.heartbeat = heartbeat
+        self.write = write
         guard Self.enabled else { finished = true; return }
-        // A terminal sees the live line only; the start line (and its detail, e.g. the log path) is for readers
-        // that can't watch a line redraw.
-        if !interactive { Output.stderr(title + "…" + (detail.map { " (\($0))" } ?? "")) }
+        // A terminal sees the live line only; the detail (e.g. the log path) is for readers that can't watch it.
+        if !interactive { write(title + (detail.map { " (\($0))" } ?? "") + " ") }
         let t = DispatchSource.makeTimerSource(queue: .global())
-        t.schedule(deadline: .now(), repeating: interactive ? 0.1 : 1)
+        t.schedule(deadline: .now(), repeating: interactive ? 0.1 : min(1, heartbeat))
         t.setEventHandler { [weak self] in self?.tick() }
         t.resume()
         timer = t
@@ -146,7 +152,7 @@ public final class ProgressLine {
 
     var current: BuildActivity { lock.lock(); defer { lock.unlock() }; return activity }
 
-    /// Stops the timer and clears the live line.
+    /// Stops the timer, then clears the live line or ends the growing one with the elapsed time.
     public func finish() {
         lock.lock()
         let wasFinished = finished
@@ -155,7 +161,7 @@ public final class ProgressLine {
         guard !wasFinished else { return }
         timer?.cancel()
         timer = nil
-        if interactive { FileHandle.standardError.write(Data("\r\u{1B}[2K".utf8)) }
+        write(interactive ? "\r\u{1B}[2K" : Self.elapsed(Date().timeIntervalSince(start)) + "\n")
     }
 
     public static func elapsed(_ seconds: TimeInterval) -> String {
@@ -167,14 +173,13 @@ public final class ProgressLine {
         lock.lock()
         guard !finished else { lock.unlock(); return }
         let now = Date()
-        let status = "\(title) · \(Self.elapsed(now.timeIntervalSince(start))) · \(activity.summary)"
         if interactive {
             frame = (frame + 1) % Self.frames.count
-            let line = Self.truncate("\(Self.frames[frame]) \(status)", to: Self.terminalWidth() - 1)
-            FileHandle.standardError.write(Data("\r\u{1B}[2K\(line)".utf8))
+            let status = "\(title) · \(Self.elapsed(now.timeIntervalSince(start))) · \(activity.summary)"
+            write("\r\u{1B}[2K" + Self.truncate("\(Self.frames[frame]) \(status)", to: Self.terminalWidth() - 1))
         } else if now.timeIntervalSince(lastBeat) >= heartbeat {
             lastBeat = now
-            Output.stderr("… " + status)
+            write(".")
         }
         lock.unlock()
     }

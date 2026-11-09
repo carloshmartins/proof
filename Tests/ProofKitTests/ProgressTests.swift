@@ -55,6 +55,24 @@ final class ProgressTests: XCTestCase {
         XCTAssertEqual(p.current.compiled, 2, "ignored after finish")
     }
 
+    func testOutsideATerminalItIsOneGrowingLineOfDots() {
+        let lock = NSLock()
+        var out = ""
+        let p = ProgressLine("building App on iPhone 16", detail: "log: ~/b.log", interactive: false, heartbeat: 0.05) { s in
+            lock.lock(); out += s; lock.unlock()
+        }
+        p.feed(Data("CompileSwift normal arm64 /a/Foo.swift\nLd /a/App.app/App normal\n".utf8))
+        Thread.sleep(forTimeInterval: 0.4)
+        p.finish()
+        p.finish()
+        lock.lock(); defer { lock.unlock() }
+        XCTAssertTrue(out.hasPrefix("building App on iPhone 16 (log: ~/b.log) ."), out)
+        XCTAssertTrue(out.hasSuffix("0s\n"), out)
+        XCTAssertEqual(out.filter { $0 == "\n" }.count, 1, "one line, written once")
+        XCTAssertFalse(out.contains("Foo.swift") || out.contains("linking"), "steps are not printed")
+        XCTAssertGreaterThan(out.filter { $0 == "." }.count, 2)
+    }
+
     func testElapsedAndTruncate() {
         XCTAssertEqual(ProgressLine.elapsed(9.7), "9s")
         XCTAssertEqual(ProgressLine.elapsed(65), "1m05s")

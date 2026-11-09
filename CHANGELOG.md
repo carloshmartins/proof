@@ -13,8 +13,9 @@ and the layout of `~/.proof`.
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.
 - Progress while xcodebuild runs: `proof build`, `test`, `run`, stack runs and the runner build print what
   they are doing on stderr (a live line with elapsed time, the file being compiled and test counts in a
-  terminal; a start line and an update every 15 seconds otherwise), so a long build no longer looks stuck.
-  The raw log is written as the build runs; outside a terminal its path is printed, for `tail -f`. `PROOF_NO_PROGRESS=1`
+  terminal; otherwise one line that grows by a dot every 15 seconds and ends with the elapsed time, cheap
+  for an agent to read), so a long build no longer looks stuck. The raw log is written as the build runs;
+  outside a terminal its path is printed, for `tail -f`. `PROOF_NO_PROGRESS=1`
   turns it off.
 
 ### Fixed
