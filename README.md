@@ -149,11 +149,11 @@ root.
 
 ## Use it with a coding agent
 
-`proof setup` installs the skill where Claude Code reads it (`~/.claude/skills/proof`). For another agent,
-point it at that agent's skills folder:
+`proof setup` installs the skill where Claude Code reads it (`~/.claude/skills/proof`). For other agents:
 
 ```sh
-proof setup --skill-dir ~/.agents/skills/proof
+proof setup --agent codex            # also cursor, copilot, or all
+proof setup --skill-dir <folder>/proof   # any other agent's skills folder
 ```
 
 The skill tells the agent to:

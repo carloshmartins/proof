@@ -8,15 +8,26 @@ program needs to parse it, and exits non-zero on failure.
 
 ## The agent skill
 
-proof ships a skill: a short instruction file (`SKILL.md`) that agents such as Claude Code, Codex and
-Cursor read to learn a tool. `proof setup` installs it where Claude Code reads it (`~/.claude/skills/proof`).
-For another agent, point it at that agent's skills folder:
+proof ships a skill: a short instruction file (`SKILL.md`, the [Agent Skills](https://agentskills.io) format)
+that coding agents read to learn a tool. `proof setup` installs it for Claude Code; `--agent` picks others:
 
 ```sh
-proof setup --skill-dir ~/.agents/skills/proof
+proof setup                          # Claude Code
+proof setup --agent codex            # OpenAI Codex
+proof setup --agent cursor --agent copilot
+proof setup --agent all              # every agent below
+proof setup --skill-dir <folder>/proof   # any other agent's skills folder
 ```
 
-Start a new agent session afterwards, so it picks the skill up.
+| `--agent` | Installs to |
+|---|---|
+| `claude` | `~/.claude/skills/proof` |
+| `codex` | `~/.agents/skills/proof` (other agents read this shared folder too) |
+| `cursor` | `~/.cursor/skills/proof` |
+| `copilot` | `~/.copilot/skills/proof` |
+
+These are personal folders, so the skill works in every repository and nothing is added to them. Start a new
+agent session afterwards, so it picks the skill up.
 
 The skill tells the agent to:
 

@@ -69,13 +69,17 @@ struct Setup: ParsableCommand {
         """)
     @OptionGroup var g: Global
     @Option(help: "Skills folder your agent reads (default ~/.claude/skills/proof).") var skillDir: String?
+    @Option(name: .customLong("agent"), help: "Install the skill for this agent: claude, codex, cursor, copilot or all. Repeatable.")
+    var agents: [String] = []
 
     func run() throws {
         guard let resources = Installer.resources(executable: Bundle.main.executablePath ?? CommandLine.arguments[0]) else {
             throw ProofError.message("runner sources and skill not found next to this binary. Run it from a proof checkout (make install)")
         }
-        let dir = skillDir.map { ($0 as NSString).expandingTildeInPath } ?? Installer.defaultSkillDir
-        try finish(try Installer.install(resources, skillDir: dir), g)
+        var dirs = try Installer.skillDirs(agents: agents)
+        if let skillDir { dirs.append((skillDir as NSString).expandingTildeInPath) }
+        if dirs.isEmpty { dirs = [Installer.defaultSkillDir] }
+        try finish(try Installer.install(resources, skillDirs: dirs), g)
     }
 }
 
