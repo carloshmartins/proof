@@ -63,6 +63,7 @@ report you can open with `proof packet --open`.
 - [Privacy](#privacy)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
+- [Roadmap](ROADMAP.md)
 
 ---
 
@@ -431,7 +432,7 @@ skill/proof/         the agent skill installed by make install
 ```
 
 Changes go through pull requests, and stacked PRs are welcome: proof tests every branch of them. See
-[CONTRIBUTING.md](CONTRIBUTING.md).
+[CONTRIBUTING.md](CONTRIBUTING.md). What's planned next is in [ROADMAP.md](ROADMAP.md).
 
 ## License
 
