@@ -14,7 +14,8 @@ public struct BuildOptions {
 
 public enum XcodeBuild {
     /// Runs xcodebuild for the configured scheme and returns the condensed result.
-    /// The raw log is kept in the session folder so nothing is lost.
+    /// The raw log is kept in the session folder so nothing is lost. While it runs, a progress line on
+    /// stderr says what xcodebuild is doing (unless `verbose` streams the raw output instead).
     public static func run(_ ctx: Context, _ opts: BuildOptions) throws -> (BriefResult, logPath: String) {
         let scheme = try ctx.requireScheme()
         let root = opts.root ?? ctx.root
@@ -35,13 +36,24 @@ public enum XcodeBuild {
         let start = Date()
         let label = opts.root == nil ? scheme : "\(scheme) @ \(Paths.relative(root, to: Paths.home))"
         Events.append(ProofEvent(kind: opts.action, name: label, status: "started"), ctx: ctx)
-        let r = try Shell.run(args, cwd: root, tee: opts.verbose ? FileHandle.standardError : nil)
-        let duration = Date().timeIntervalSince(start)
 
+        // The raw log is written as xcodebuild runs, so `tail -f` on it shows a long build live.
         let logs = Paths.join(ctx.sessionDir, "logs")
         try Paths.ensureDir(logs)
         let logPath = Paths.join(logs, "\(opts.action)-\(Session.timestamp()).log")
-        try? r.combined.write(toFile: logPath, atomically: true, encoding: .utf8)
+        FileManager.default.createFile(atPath: logPath, contents: nil)
+        let log = FileHandle(forWritingAtPath: logPath)
+        defer { try? log?.close() }
+
+        let verb = opts.action == "test" ? "testing" : "building"
+        let progress = opts.verbose ? nil
+            : ProgressLine("\(verb) \(label) on \(sim.name)", detail: "log: \((logPath as NSString).abbreviatingWithTildeInPath)")
+        let r = try Shell.run(args, cwd: root, tee: opts.verbose ? FileHandle.standardError : nil) { chunk in
+            log?.write(chunk)
+            progress?.feed(chunk)
+        }
+        progress?.finish()
+        let duration = Date().timeIntervalSince(start)
 
         var brief = BriefParser(root: root, keepWarnings: opts.keepWarnings).parse(r.combined, action: opts.action, duration: duration)
         if brief.status == "unknown" { brief.status = r.ok ? "succeeded" : "failed" }

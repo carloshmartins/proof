@@ -28,7 +28,9 @@ public enum Output {
     }
 
     public static func stderr(_ s: String) {
-        FileHandle.standardError.write(Data((s + "\n").utf8))
+        // On a terminal, clear a live progress line first so the message doesn't land on its end.
+        let clear = isatty(STDERR_FILENO) == 1 ? "\r\u{1B}[2K" : ""
+        FileHandle.standardError.write(Data((clear + s + "\n").utf8))
     }
 }
 

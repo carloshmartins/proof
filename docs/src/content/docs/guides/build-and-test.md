@@ -24,6 +24,12 @@ error  Modules/Settings/Sources/SettingsStore.swift:88:5  missing return in inst
 - The same error reported by several targets appears once.
 - Linker errors (`undefined symbols`, `ld: …`) are included.
 
+While xcodebuild runs, proof says what it is doing on stderr, so a long build never looks stuck. In a
+terminal that is one live line (elapsed time, the file being compiled, tests passed and failed); for an
+agent or a pipe it is a start line and a short update every 15 seconds. The start line names the raw log,
+written as the build runs, so `tail -f` on it shows everything. stdout (and `--json`) is unchanged. Set
+`PROOF_NO_PROGRESS=1` to turn it off.
+
 ## Test
 
 ```sh
