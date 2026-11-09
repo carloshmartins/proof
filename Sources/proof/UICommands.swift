@@ -380,12 +380,28 @@ struct AX: ParsableCommand {
     }
 
     struct Audit: ParsableCommand {
-        static let configuration = CommandConfiguration(abstract: "Runtime audit of the current screen via the runner.")
+        static let configuration = CommandConfiguration(
+            abstract: "Audit the current screen: Xcode's accessibility audit plus controls without identifiers.",
+            discussion: """
+            Xcode's audit (iOS 17+ simulators) checks contrast, hit regions, descriptions, Dynamic Type,
+            clipped text and traits. Run it on each screen you change, and in --variants looks too.
+            """)
         @OptionGroup var g: Global
+        @Option(help: "Only these issue types, comma separated: contrast, hit-region, description, dynamic-type, text-clipped, trait, element-detection.")
+        var only: String?
+        @Flag(help: "Exit non-zero when anything is found.") var strict = false
         func run() throws {
-            let nodes = UITree.missingIdentifiers(try UITree.decode(try runnerCommand("/tree", [:])))
-            let text = nodes.isEmpty ? "AX AUDIT clean" : "AX AUDIT \(nodes.count) without identifier\n" + UITree.render(nodes, interactiveOnly: true)
-            try finish(MessageReport(ok: nodes.isEmpty, text), g)
+            let ctx = try Context.current()
+            let missing = UITree.missingIdentifiers(try UITree.decode(try runnerCommand("/tree", [:])))
+            var (supported, issues) = AXAuditReport.decodeIssues(try runnerCommand("/audit", [:]))
+            if let only {
+                let types = Set(only.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) })
+                issues = issues.filter { types.contains($0.type) }
+            }
+            let report = AXAuditReport(supported: supported, issues: issues, missingIdentifiers: missing)
+            try Paths.ensureDir(Paths.join(ctx.sessionDir, "results"))
+            try Output.writeJSON(report, to: Paths.join(ctx.sessionDir, "results", "ax-audit.json"))
+            try finish(report, g, failed: strict && !report.clean)
         }
     }
 }

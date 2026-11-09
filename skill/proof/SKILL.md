@@ -126,6 +126,7 @@ is untouched), reinstalls your branch, and diffs every snap. `--fresh-baseline` 
 proof ax scan                    # static: SwiftUI, UIKit, xib/storyboard controls without identifiers
 proof ax scan Modules/Login --control PrimaryButton   # include custom controls
 proof ui tree --missing-ids      # runtime: current screen
+proof ax audit                   # Xcode's audit of the current screen: contrast, hit area, Dynamic Type, …
 ```
 
 When adding identifiers, use the pattern `<feature>.<element>` (for example `login.submit`).

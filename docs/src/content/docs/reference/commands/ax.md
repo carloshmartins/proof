@@ -36,11 +36,19 @@ proof ax scan [--json] [<paths> ...] [--control <control> ...] [--include-tests]
 
 ## proof ax audit
 
-Runtime audit of the current screen via the runner.
+Audit the current screen: Xcode's accessibility audit plus controls without identifiers.
 
 ```sh
-proof ax audit [--json]
+proof ax audit [--json] [--only <only>] [--strict]
 ```
+
+Xcode's audit (iOS 17+ simulators) checks contrast, hit regions, descriptions, Dynamic Type,
+clipped text and traits. Run it on each screen you change, and in --variants looks too.
+
+| Argument | Description |
+|---|---|
+| `--only <only>` | Only these issue types, comma separated: contrast, hit-region, description, dynamic-type, text-clipped, trait, element-detection. |
+| `--strict` | Exit non-zero when anything is found. |
 
 **JSON output** (`--json`):
 

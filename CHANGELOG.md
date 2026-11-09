@@ -27,6 +27,9 @@ and the layout of `~/.proof`.
   and Dynamic Type sizes (switched live, then put back), and `proof flow run <flow> --variants dark,ar,rtl`
   replays the flow once more per variant, relaunched in a locale or right-to-left when asked. Variant snaps
   are named `<name>@<variant>` and compare with the same variant on another branch, baselines included.
+- `proof ax audit` runs Xcode's accessibility audit (`performAccessibilityAudit`, iOS 17+ simulators) on the
+  current screen: contrast, hit regions, descriptions, Dynamic Type, clipped text and traits, next to the
+  controls without identifiers. `--only <types>` filters, `--strict` exits 1 when anything is found.
 - Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
   first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.
@@ -36,6 +39,10 @@ and the layout of `~/.proof`.
   for an agent to read), so a long build no longer looks stuck. The raw log is written as the build runs;
   outside a terminal its path is printed, for `tail -f`. `PROOF_NO_PROGRESS=1`
   turns it off.
+
+### Changed
+- proof refreshes the runner sources in `~/.proof/runner/src` when the ones shipped with the binary differ,
+  and restarts an older runner, so upgrading proof no longer needs `proof setup` for the runner.
 
 ### Fixed
 - Starting the simulator runner is reliable: each start gets a session the runner echoes on `/health`, so a

@@ -70,6 +70,19 @@ public enum Installer {
         return Result(runner: runnerDest, skill: skill, source: resources.root)
     }
 
+    /// Whether the runner sources at `runnerDest` are the ones in `resources` (same files, same contents).
+    public static func runnerMatches(_ resources: Resources, runnerDest: String = Paths.runnerSource) -> Bool {
+        let fm = FileManager.default
+        guard let files = fm.enumerator(atPath: resources.runner) else { return false }
+        for case let file as String in files where !file.contains("xcuserdata") {
+            let source = Paths.join(resources.runner, file)
+            var isDir: ObjCBool = false
+            guard fm.fileExists(atPath: source, isDirectory: &isDir), !isDir.boolValue else { continue }
+            if !fm.contentsEqual(atPath: source, andPath: Paths.join(runnerDest, file)) { return false }
+        }
+        return true
+    }
+
     /// Copies only the runner sources (used when ~/.proof was cleared; the skill is left alone).
     public static func installRunner(_ resources: Resources, runnerDest: String = Paths.runnerSource) throws {
         let fm = FileManager.default

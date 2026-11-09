@@ -41,6 +41,7 @@ final class CommandHandler {
             XCUIDevice.shared.press(.home)
             return [:]
         case "/alert": return try alert(a)
+        case "/audit": return try audit(a)
         default:
             throw RunnerError("unknown command \(path)")
         }
@@ -72,6 +73,39 @@ final class CommandHandler {
     private func requireApp() throws -> XCUIApplication {
         guard let app else { throw RunnerError("no app attached. Run: proof ui launch") }
         return app
+    }
+
+    // MARK: - Accessibility audit
+
+    /// Xcode's accessibility audit (iOS 17+) on the current screen. Every issue is collected and ignored,
+    /// so the audit never records a test failure in the serving loop.
+    private func audit(_ a: [String: Any]) throws -> [String: Any] {
+        let app = try requireApp()
+        guard #available(iOS 17.0, *) else { return ["supported": false, "issues": [Any]()] }
+        var issues: [[String: Any]] = []
+        try app.performAccessibilityAudit(for: .all) { issue in
+            var d: [String: Any] = ["type": Self.auditTypeName(issue.auditType),
+                                    "summary": issue.compactDescription,
+                                    "detail": issue.detailedDescription]
+            if let el = issue.element, el.exists {
+                let f = el.frame
+                d["element"] = ["type": typeName(el.elementType), "id": el.identifier, "label": el.label,
+                                "frame": [Int(f.minX), Int(f.minY), Int(f.width), Int(f.height)]] as [String: Any]
+            }
+            issues.append(d)
+            return true
+        }
+        return ["supported": true, "issues": issues]
+    }
+
+    @available(iOS 17.0, *)
+    private static func auditTypeName(_ t: XCUIAccessibilityAuditType) -> String {
+        let names: [(XCUIAccessibilityAuditType, String)] = [
+            (.contrast, "contrast"), (.elementDetection, "element-detection"), (.hitRegion, "hit-region"),
+            (.sufficientElementDescription, "description"), (.dynamicType, "dynamic-type"),
+            (.textClipped, "text-clipped"), (.trait, "trait"),
+        ]
+        return names.first { t == $0.0 }?.1 ?? "other"
     }
 
     // MARK: - Tree
