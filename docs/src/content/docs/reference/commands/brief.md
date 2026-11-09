@@ -10,11 +10,12 @@ sidebar:
 Condense xcodebuild output from stdin: xcodebuild … 2>&1 | proof brief
 
 ```sh
-proof brief [--json] [--warnings]
+proof brief [--json] [--max-lines <max-lines>] [--warnings]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--warnings` | List warnings, not just the count. |
 
 **JSON output** (`--json`):

@@ -10,11 +10,12 @@ sidebar:
 Build, install and launch the app on the simulator, attached to the runner.
 
 ```sh
-proof run [--json] [--arg <arg> ...] [--no-build]
+proof run [--json] [--max-lines <max-lines>] [--arg <arg> ...] [--no-build]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--arg <arg>` | Launch argument. Repeatable. Repeatable. |
 | `--no-build` | Skip the build, just reinstall and relaunch. |
 

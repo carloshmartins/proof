@@ -32,11 +32,13 @@ struct Proof: ParsableCommand {
 struct Global: ParsableArguments {
     @Flag(name: .long, help: "Machine-readable JSON output for agents.")
     var json = false
+    @Option(name: .customLong("max-lines"), help: "Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES.")
+    var maxLines: Int?
 }
 
 /// Emits a report and exits non-zero when it represents a failure.
 func finish<R: Report>(_ report: R, _ g: Global, failed: Bool = false) throws {
-    Output.emit(report, json: g.json)
+    Output.emit(report, json: g.json, maxLines: Output.lineBudget(g.maxLines))
     if failed { throw ExitCode(1) }
 }
 
@@ -317,6 +319,6 @@ struct PacketCommand: ParsableCommand {
         }
         let report = try Packet.build(ctx)
         if open { _ = try? Shell.run(["open", Paths.join(ctx.sessionDir, "report.html")]) }
-        if g.json || print { Output.emit(report, json: g.json) } else { Swift.print(report.summary) }
+        if g.json || print { Output.emit(report, json: g.json, maxLines: Output.lineBudget(g.maxLines)) } else { Swift.print(report.summary) }
     }
 }

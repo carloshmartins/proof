@@ -10,7 +10,7 @@ sidebar:
 Review someone else's PR: build it, replay your flows on its base and on it, open the before and after.
 
 ```sh
-proof review [--json] <number> [--flow <flow> ...] [--test] [--fresh-baseline] [--open] [--verbose]
+proof review [--json] [--max-lines <max-lines>] <number> [--flow <flow> ...] [--test] [--fresh-baseline] [--open] [--verbose]
 ```
 
 Works in the stack worktree, so your checkout is untouched. The base is replayed only for flows whose
@@ -18,6 +18,7 @@ snaps it doesn't have yet. Results go to the session pr-<number>; the simulator 
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<number>` | PR number. **Required.** |
 | `--flow <flow>` | Replay only this flow. Repeatable. Default: every flow of the repo. Repeatable. |
 | `--test` | Also run the tests. |

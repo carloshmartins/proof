@@ -20,11 +20,12 @@ proof ax <subcommand>
 Static scan of Swift, xib and storyboard files.
 
 ```sh
-proof ax scan [--json] [<paths> ...] [--control <control> ...] [--include-tests] [--strict]
+proof ax scan [--json] [--max-lines <max-lines>] [<paths> ...] [--control <control> ...] [--include-tests] [--strict]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<paths>` | Files or folders. Defaults to the repo root. Repeatable. |
 | `--control <control>` | Custom control type to check, e.g. PrimaryButton. Repeatable. Repeatable. |
 | `--include-tests` | Also scan test targets. |
@@ -39,7 +40,7 @@ proof ax scan [--json] [<paths> ...] [--control <control> ...] [--include-tests]
 Audit the current screen: Xcode's accessibility audit plus controls without identifiers.
 
 ```sh
-proof ax audit [--json] [--only <only>] [--strict]
+proof ax audit [--json] [--max-lines <max-lines>] [--only <only>] [--strict]
 ```
 
 Xcode's audit (iOS 17+ simulators) checks contrast, hit regions, descriptions, Dynamic Type,
@@ -47,6 +48,7 @@ clipped text and traits. Run it on each screen you change, and in --variants loo
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--only <only>` | Only these issue types, comma separated: contrast, hit-region, description, dynamic-type, text-clipped, trait, element-detection. |
 | `--strict` | Exit non-zero when anything is found. |
 

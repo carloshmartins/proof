@@ -10,11 +10,12 @@ sidebar:
 Save settings for this repo (stored in ~/.proof/config.json).
 
 ```sh
-proof init [--json] [--scheme <scheme>] [--workspace <workspace>] [--project <project>] [--test-plan <test-plan>] [--simulator <simulator>] [--bundle-id <bundle-id>] [--trunk <trunk>] [--prepare <prepare>] [--show] [--forget]
+proof init [--json] [--max-lines <max-lines>] [--scheme <scheme>] [--workspace <workspace>] [--project <project>] [--test-plan <test-plan>] [--simulator <simulator>] [--bundle-id <bundle-id>] [--trunk <trunk>] [--prepare <prepare>] [--show] [--forget]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--scheme <scheme>` | Scheme to build and test. |
 | `--workspace <workspace>` | Workspace path relative to the repo root. |
 | `--project <project>` | Project path relative to the repo root. |

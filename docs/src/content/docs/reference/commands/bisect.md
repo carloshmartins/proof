@@ -10,7 +10,7 @@ sidebar:
 Find the commit that broke a flow, changed a screen or made a test fail.
 
 ```sh
-proof bisect [--json] [--flow <flow>] [--snap <snap>] [--test <test>] [--good <good>] [--bad <bad>] [--verbose]
+proof bisect [--json] [--max-lines <max-lines>] [--flow <flow>] [--snap <snap>] [--test <test>] [--good <good>] [--bad <bad>] [--verbose]
 ```
 
 A binary search between --good (default: where this branch left its base) and --bad (default: HEAD).
@@ -24,6 +24,7 @@ proof bisect --test TimerTests/testPresets      first commit where the test fail
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--flow <flow>` | Flow to replay on each commit. |
 | `--snap <snap>` | With --flow: look for the first commit where this snap's tree differs from the good commit's. |
 | `--test <test>` | Test identifier (Target/Class/test) to run on each commit. |

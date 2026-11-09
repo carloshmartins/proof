@@ -10,11 +10,12 @@ sidebar:
 Screenshot + accessibility tree of the current screen, saved for the packet.
 
 ```sh
-proof snap [--json] <name> [--compare <compare>] [--variants <variants>]
+proof snap [--json] [--max-lines <max-lines>] <name> [--compare <compare>] [--variants <variants>]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<name>` | Screen name, e.g. login or settings-empty. **Required.** |
 | `--compare <compare>` | Diff the tree against the same-named snap of a branch: a name like main or develop, or "base" for the branch this PR targets. |
 | `--variants <variants>` | Also snap the screen in these looks, e.g. dark,ax5,dark+ax3 (appearance and text size). Snaps are named <name>@<variant>; the simulator's look is put back after. |

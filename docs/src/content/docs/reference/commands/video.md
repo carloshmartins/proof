@@ -18,11 +18,12 @@ proof video <subcommand>
 ## proof video start
 
 ```sh
-proof video start [--json] [<name>]
+proof video start [--json] [--max-lines <max-lines>] [<name>]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<name>` | Default: `session`. |
 
 **JSON output** (`--json`):
@@ -32,8 +33,12 @@ proof video start [--json] [<name>]
 ## proof video stop
 
 ```sh
-proof video stop [--json]
+proof video stop [--json] [--max-lines <max-lines>]
 ```
+
+| Argument | Description |
+|---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 
 **JSON output** (`--json`):
 

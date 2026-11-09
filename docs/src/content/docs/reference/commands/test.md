@@ -10,11 +10,12 @@ sidebar:
 Run tests on this branch, or on every branch of the stack with --stack.
 
 ```sh
-proof test [--json] [--stack] [--only <only> ...] [--skip <skip> ...] [--branches <branches>] [--from <from>] [--stop-on-fail] [--retry <retry>] [--coverage] [--compare <compare>] [--verbose]
+proof test [--json] [--max-lines <max-lines>] [--stack] [--only <only> ...] [--skip <skip> ...] [--branches <branches>] [--from <from>] [--stop-on-fail] [--retry <retry>] [--coverage] [--compare <compare>] [--verbose]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--stack` | Test every branch of the current stack in a dedicated worktree. |
 | `--only <only>` | Only run this test identifier (Target/Class/test). Repeatable. Repeatable. |
 | `--skip <skip>` | Skip this test identifier. Repeatable. Repeatable. |

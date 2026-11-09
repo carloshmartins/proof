@@ -10,8 +10,12 @@ sidebar:
 Check tools, config and runner.
 
 ```sh
-proof doctor [--json]
+proof doctor [--json] [--max-lines <max-lines>]
 ```
+
+| Argument | Description |
+|---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 
 **JSON output** (`--json`):
 

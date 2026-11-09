@@ -7,6 +7,8 @@ description: Build, test and verify iOS app changes with the `proof` CLI. Use fo
 
 `proof` condenses Xcode output and lets you prove a change works on the simulator.
 Every command prints compact text. Add `--json` when you need to parse the result.
+Output too long for your context? `--max-lines 60` (or `PROOF_MAX_LINES=60`) keeps the head and saves the rest
+to `~/.proof/last-output.txt`; `proof ui tree --depth 4` trims deep screens.
 A non-zero exit means failure. Nothing is written to the repo; state lives in `~/.proof`.
 
 ## Rules

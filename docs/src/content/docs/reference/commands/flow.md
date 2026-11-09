@@ -32,11 +32,12 @@ snap home
 Replay a flow on this branch, or on every branch of the stack with --stack.
 
 ```sh
-proof flow run [--json] <flow> [--var <var> ...] [--continue] [--compare <compare>] [--video] [--relaunch] [--stack] [--branches <branches>] [--from <from>] [--stop-on-fail] [--verbose] [--fresh-baseline] [--no-baseline] [--variants <variants>] [--devices <devices>]
+proof flow run [--json] [--max-lines <max-lines>] <flow> [--var <var> ...] [--continue] [--compare <compare>] [--video] [--relaunch] [--stack] [--branches <branches>] [--from <from>] [--stop-on-fail] [--verbose] [--fresh-baseline] [--no-baseline] [--variants <variants>] [--devices <devices>]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<flow>` | Flow name or path to a .flow file. **Required.** |
 | `--var <var>` | NAME=value for ${NAME}. Repeatable. Repeatable. |
 | `--continue` | Keep going after a failed step. |
@@ -61,8 +62,12 @@ proof flow run [--json] <flow> [--var <var> ...] [--continue] [--compare <compar
 ## proof flow list
 
 ```sh
-proof flow list [--json]
+proof flow list [--json] [--max-lines <max-lines>]
 ```
+
+| Argument | Description |
+|---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 
 **JSON output** (`--json`):
 
@@ -73,11 +78,12 @@ proof flow list [--json]
 Print a flow with includes expanded.
 
 ```sh
-proof flow show [--json] <flow>
+proof flow show [--json] [--max-lines <max-lines>] <flow>
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<flow>` | **Required.** |
 
 **JSON output** (`--json`):
@@ -89,11 +95,12 @@ proof flow show [--json] <flow>
 Validate a flow without running it (syntax, includes, variables).
 
 ```sh
-proof flow check [--json] <flow> [--var <var> ...]
+proof flow check [--json] [--max-lines <max-lines>] <flow> [--var <var> ...]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<flow>` | **Required.** |
 | `--var <var>` | NAME=value. Repeatable. Repeatable. |
 

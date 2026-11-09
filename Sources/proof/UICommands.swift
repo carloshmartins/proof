@@ -132,6 +132,7 @@ struct UI: ParsableCommand {
         @Flag(help: "Include element frames.") var frames = false
         @Flag(name: .shortAndLong, help: "Only interactive elements, flat.") var interactive = false
         @Flag(help: "Only interactive elements missing an accessibility identifier.") var missingIds = false
+        @Option(help: "Only elements this many levels deep or less (0 is the top).") var depth: Int?
 
         struct TreeReport: Report {
             let nodes: [UINode]
@@ -144,6 +145,7 @@ struct UI: ParsableCommand {
         func run() throws {
             let response = try runnerCommand("/tree", [:])
             var nodes = try UITree.decode(response)
+            if let depth { nodes = UITree.limit(nodes, depth: depth) }
             let screen = UITree.screen(response).map { ScreenSize(width: $0[0], height: $0[1]) }
             if missingIds { nodes = UITree.missingIdentifiers(nodes) }
             let rendered = missingIds

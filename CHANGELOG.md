@@ -51,6 +51,9 @@ and the layout of `~/.proof`.
 - `proof bisect` finds the commit that broke a flow (`--flow`), changed a screen (`--flow … --snap …`) or made
   a test fail (`--test`), with a binary search between `--good` (default: where the branch left its base)
   and `--bad` (default `HEAD`) in the stack worktree. Commits that don't build are skipped.
+- Output budget: `--max-lines N` on any command (or `PROOF_MAX_LINES`) cuts the text output to N lines and
+  keeps the full text in `~/.proof/last-output.txt`; JSON is never cut. `proof ui tree --depth N` limits the
+  tree.
 - Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
   first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.

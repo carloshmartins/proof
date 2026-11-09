@@ -10,11 +10,12 @@ sidebar:
 Bundle this branch's build, tests, stack, ax scan and snaps into report.md / report.html.
 
 ```sh
-proof packet [--json] [--open] [--print] [--reset]
+proof packet [--json] [--max-lines <max-lines>] [--open] [--print] [--reset]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--open` | Open report.html in the browser. |
 | `--print` | Print the full markdown, not just the summary. |
 | `--reset` | Delete this branch's session (snaps, results, logs). |

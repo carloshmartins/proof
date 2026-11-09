@@ -91,6 +91,12 @@ public enum UITree {
         }.joined(separator: "\n")
     }
 
+    /// Nodes no deeper than `depth`, relative to the shallowest node.
+    public static func limit(_ nodes: [UINode], depth: Int) -> [UINode] {
+        let top = nodes.map(\.depth).min() ?? 0
+        return nodes.filter { $0.depth - top <= depth }
+    }
+
     public static let interactiveTypes: Set<String> = [
         "button", "textfield", "securefield", "searchfield", "textview", "switch", "toggle", "slider",
         "stepper", "segmented", "link", "cell", "picker", "pickerwheel", "datepicker", "menuitem", "tab",

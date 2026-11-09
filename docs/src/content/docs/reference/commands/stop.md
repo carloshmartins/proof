@@ -10,13 +10,14 @@ sidebar:
 Stop the newest running proof command (build, test, run, flow run) cleanly, as Ctrl-C would.
 
 ```sh
-proof stop [--json] [--all]
+proof stop [--json] [--max-lines <max-lines>] [--all]
 ```
 
 Results so far are still written. Nothing running is not an error.
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--all` | Stop every running proof command. |
 
 **JSON output** (`--json`):
