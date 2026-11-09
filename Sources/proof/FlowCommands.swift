@@ -79,7 +79,7 @@ struct FlowCommand: ParsableCommand {
           expect --id home.title --timeout 15
           snap home
         """,
-        subcommands: [RunFlow.self, List.self, Show.self, Check.self]
+        subcommands: [RunFlow.self, List.self, Show.self, Check.self, Export.self]
     )
 
     struct RunFlow: ParsableCommand {
@@ -152,6 +152,28 @@ struct FlowCommand: ParsableCommand {
             let ctx = try Context.current()
             let names = Flow.list(repo: ctx.repo)
             try finish(MessageReport(names.isEmpty ? "no flows yet · record one: proof record start" : names.joined(separator: "\n")), g)
+        }
+    }
+
+    struct Export: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            abstract: "Print a flow as one self-contained file to attach to a bug report.",
+            discussion: "Includes are expanded and a header says where it was recorded. Paste it into an issue with --markdown; `proof repro <issue>` replays it.")
+        @OptionGroup var g: Global
+        @Argument var flow: String
+        @Flag(help: "Wrap it in a ```flow block, ready to paste into an issue.") var markdown = false
+        @Option(help: "Write to this file instead of printing it.") var out: String?
+        func run() throws {
+            let ctx = try Context.current()
+            let f = try Flow.load(flow, repo: ctx.repo)
+            let device = Runner.state().flatMap { s in ((try? Simulators.list()) ?? []).first { $0.udid == s.udid }?.title }
+            let text = Repro.export(f, branch: ctx.branch, sha: (try? Git.shortSHA(cwd: ctx.root)) ?? "?", device: device, markdown: markdown)
+            if let out {
+                try (text + "\n").write(toFile: (out as NSString).expandingTildeInPath, atomically: true, encoding: .utf8)
+                try finish(MessageReport("wrote \(out)"), g)
+            } else {
+                try finish(MessageReport(text), g)
+            }
         }
     }
 

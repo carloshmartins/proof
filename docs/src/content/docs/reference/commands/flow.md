@@ -25,7 +25,7 @@ expect --id home.title --timeout 15
 snap home
 ```
 
-**Subcommands:** [`run`](#proof-flow-run) · [`list`](#proof-flow-list) · [`show`](#proof-flow-show) · [`check`](#proof-flow-check)
+**Subcommands:** [`run`](#proof-flow-run) · [`list`](#proof-flow-list) · [`show`](#proof-flow-show) · [`check`](#proof-flow-check) · [`export`](#proof-flow-export)
 
 ## proof flow run
 
@@ -103,6 +103,27 @@ proof flow check [--json] [--max-lines <max-lines>] <flow> [--var <var> ...]
 | `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<flow>` | **Required.** |
 | `--var <var>` | NAME=value. Repeatable. Repeatable. |
+
+**JSON output** (`--json`):
+
+- [`MessageReport`](../../json-output/#messagereport)
+
+## proof flow export
+
+Print a flow as one self-contained file to attach to a bug report.
+
+```sh
+proof flow export [--json] [--max-lines <max-lines>] <flow> [--markdown] [--out <out>]
+```
+
+Includes are expanded and a header says where it was recorded. Paste it into an issue with --markdown; `proof repro <issue>` replays it.
+
+| Argument | Description |
+|---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
+| `<flow>` | **Required.** |
+| `--markdown` | Wrap it in a ```flow block, ready to paste into an issue. |
+| `--out <out>` | Write to this file instead of printing it. |
 
 **JSON output** (`--json`):
 

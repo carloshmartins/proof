@@ -356,6 +356,7 @@ Every command prints short text by default, accepts `--json` for scripts, and ex
 | `proof video start / stop` | Record the simulator screen |
 | `proof ax scan` | Find controls without accessibility identifiers in your code |
 | `proof bisect --flow <f> [--snap <s>] \| --test <id>` | Find the commit that broke a flow, changed a screen or failed a test |
+| `proof flow export <f> --markdown`, `proof repro <issue>` | Put a flow in a bug report; replay the flow from an issue |
 | `proof review <PR>` | Build someone else's PR, replay your flows on its base and on it, open the before and after |
 | `proof ax audit` | Xcode's accessibility audit of the current screen: contrast, hit areas, Dynamic Type, … |
 | `proof pr comments` | Unresolved review threads on this branch's PR |

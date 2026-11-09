@@ -54,6 +54,9 @@ and the layout of `~/.proof`.
 - Output budget: `--max-lines N` on any command (or `PROOF_MAX_LINES`) cuts the text output to N lines and
   keeps the full text in `~/.proof/last-output.txt`; JSON is never cut. `proof ui tree --depth N` limits the
   tree.
+- Bug reports as flows: `proof flow export <flow> [--markdown] [--out file]` prints a self-contained flow
+  (includes expanded, a header with branch, commit, device and needed variables), and `proof repro
+  <issue|URL|file>` replays the flow from an issue (via `gh`) or a file, exiting 1 when the bug reproduced.
 - Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
   first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.

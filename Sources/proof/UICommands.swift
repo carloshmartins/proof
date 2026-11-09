@@ -479,6 +479,53 @@ struct BisectCommand: ParsableCommand {
     }
 }
 
+struct ReproCommand: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "repro",
+        abstract: "Replay the flow from a bug report: a GitHub issue, or a .flow file.",
+        discussion: """
+        From an issue, proof takes the first ```flow block (or the first code block made only of flow steps),
+        saves it as the flow issue-<number> and replays it from a fresh launch. Exit 1 means the bug reproduced.
+          proof repro 123
+          proof repro https://github.com/acme/app/issues/123
+          proof repro ~/Downloads/checkout-crash.flow
+        """)
+    @OptionGroup var g: Global
+    @Argument(help: "Issue number or URL, or a .flow file.") var target: String
+    @Option(name: .customLong("var"), help: "NAME=value for ${NAME}. Repeatable.") var vars: [String] = []
+
+    func run() throws {
+        let ctx = try Context.current()
+        track(ctx)
+        let flow: Flow
+        let source: String
+        let path = (target as NSString).expandingTildeInPath
+        if FileManager.default.fileExists(atPath: path) {
+            flow = try Flow.load(path, repo: ctx.repo)
+            source = (path as NSString).lastPathComponent
+        } else if let number = Repro.issueNumber(target) {
+            let body = try Shell.checked(["gh", "issue", "view", String(number), "--json", "body", "-q", ".body"], cwd: ctx.root)
+            guard let text = Repro.extractFlow(markdown: body) else {
+                throw ProofError.message("issue #\(number) has no flow. Paste one from `proof flow export <flow> --markdown`")
+            }
+            let saved = try Flow.save(name: "issue-\(number)", lines: text.components(separatedBy: "\n"), repo: ctx.repo, overwrite: true)
+            flow = try Flow.load(saved, repo: ctx.repo)
+            source = "issue #\(number)"
+        } else {
+            throw ValidationError("not a file, issue number or issue URL: \(target)")
+        }
+        var o = FlowRunOptions()
+        o.relaunch = true
+        for v in vars {
+            let p = v.split(separator: "=", maxSplits: 1).map(String.init)
+            guard p.count == 2 else { throw ValidationError("--var expects NAME=value, got \(v)") }
+            o.vars[p[0]] = p[1]
+        }
+        let report = ReproReport(source: source, flow: try FlowEngine.run(flow, ctx: ctx, options: o))
+        try finish(report, g, failed: report.reproduced)
+    }
+}
+
 extension PR {
 
     struct Comments: ParsableCommand {
