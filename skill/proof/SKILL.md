@@ -55,7 +55,11 @@ proof ui open tempo://presets/new                  # deep link
 proof ui push --title "Done" --body "Take a break" # push notification (or --payload file.json)
 proof ui permission grant photos                   # revoke | reset; location, contacts, microphone, …
 proof ui location 51.5072,-0.1276                  # or --clear
+proof ui crashes                                   # the app's latest crash: exception, file:line, stack
 ```
+
+When a step fails because the app crashed, the error starts with `CRASH` and points at the file and line
+(`▸` marks the app's frames). Fix that code, rebuild with `proof run`, and replay.
 
 The runner starts automatically on first use (the first time it builds for about a minute). If a tap
 fails with "element not found", run `proof ui tree` and choose a selector from what is actually there.

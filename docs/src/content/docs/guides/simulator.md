@@ -69,6 +69,24 @@ proof ui location --clear
 location-always, photos-add, photos, media-library, microphone, motion, reminders, siri. The camera isn't one
 of them. Revoking a permission can terminate the app; `proof ui launch` starts it again.
 
+## When the app crashes
+
+A `proof ui` step or flow step that fails because the app crashed says so, with where in your code, instead
+of "element not found":
+
+```
+CRASH Tempo · EXC_BREAKPOINT (SIGTRAP) · Swift runtime trap
+at PresetStore.swift:42  PresetStore.preset(at:)
+  0   libswiftCore.dylib  _assertionFailure(_:_:file:line:flags:)
+  1   libswiftCore.dylib  Array._checkSubscript(_:wasNativeTypeChecked:)
+  2 ▸ Tempo.debug.dylib  PresetStore.preset(at:)  (PresetStore.swift:42)
+  …
+report → ~/Library/Logs/DiagnosticReports/Tempo-2026-11-09-101500.ips
+```
+
+`▸` marks your app's frames. `proof ui crashes` shows the latest crash of the app (`--minutes` to look
+further back). proof reads the crash reports macOS writes for simulator apps; nothing is added to the app.
+
 ## Wait and check
 
 ```sh

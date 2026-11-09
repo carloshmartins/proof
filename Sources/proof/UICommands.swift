@@ -36,9 +36,17 @@ func executeStep(_ tokens: [String]) throws -> (FlowStep, FlowEngine.Outcome) {
     do {
         outcome = try FlowEngine.perform(step, ctx: ctx)
     } catch {
-        Events.append(ProofEvent(kind: "step", name: step.line, status: "failed", detail: "\(error)",
+        var failure = error
+        // A step that fails because the app crashed says so, with the stack trace, not "element not found".
+        // Wait for this step's own report first; then take an earlier crash nobody reported yet.
+        let gone = Crashes.looksLikeAppGone("\(error)")
+        if let crash = Crashes.unreported(ctx, since: t0.addingTimeInterval(-2), wait: gone ? 5 : 0)
+            ?? Crashes.unreported(ctx, since: t0.addingTimeInterval(-120)) {
+            failure = ProofError.message(crash.text + "\nstep failed: \(error)")
+        }
+        Events.append(ProofEvent(kind: "step", name: step.line, status: "failed", detail: "\(failure)",
                                  duration: Date().timeIntervalSince(t0)), ctx: ctx)
-        throw error
+        throw failure
     }
     Events.append(ProofEvent(kind: "step", name: step.line, status: "ok", detail: outcome.detail,
                              duration: Date().timeIntervalSince(t0), file: outcome.file, target: outcome.target), ctx: ctx)
@@ -59,7 +67,7 @@ struct UI: ParsableCommand {
         discussion: "Every action command is also a flow step: while `proof record` is on, it is recorded.",
         subcommands: [Start.self, Stop.self, Status.self, Launch.self, Attach.self, Terminate.self, Tree.self, At.self,
                       Tap.self, LongPress.self, TypeText.self, Swipe.self, Wait.self, Expect.self, Home.self, Alert.self,
-                      Open.self, Push.self, Permission.self, Location.self]
+                      Open.self, Push.self, Permission.self, Location.self, CrashesCommand.self]
     )
 
     struct Start: ParsableCommand {
@@ -261,6 +269,33 @@ struct UI: ParsableCommand {
         @Option(help: "Exact button label to tap.") var button: String?
         @Flag(help: "Tap the first (cancel) button instead of the last.") var dismiss = false
         func run() throws { try performStep(["alert"] + (button.map { ["--button", $0] } ?? []) + (dismiss ? ["--dismiss"] : []), g) }
+    }
+
+    struct CrashesCommand: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            commandName: "crashes",
+            abstract: "The app's latest crash: exception, where in your code, and the crashed thread.",
+            discussion: "Read from the crash reports macOS writes for simulator apps. A failing ui step or flow step reports a crash on its own.")
+        @OptionGroup var g: Global
+        @Option(help: "Look back this many minutes.") var minutes = 60
+        @Option(help: "Bundle id; defaults to the configured one.") var bundleId: String?
+
+        struct CrashesReport: Report {
+            let crashes: [CrashReport]
+            let bundleId: String
+            let minutes: Int
+            var text: String {
+                guard let latest = crashes.first else { return "no crashes of \(bundleId) in the last \(minutes) min" }
+                return latest.text + (crashes.count > 1 ? "\n\(crashes.count - 1) earlier crash\(crashes.count == 2 ? "" : "es") (--json lists them)" : "")
+            }
+        }
+
+        func run() throws {
+            let ctx = try Context.current()
+            guard let id = bundleId ?? ctx.config.bundleId else { throw ProofError.message("no bundle id. Add --bundle-id or run `proof run` once") }
+            let crashes = Crashes.find(bundleId: id, since: Date().addingTimeInterval(-Double(minutes) * 60))
+            try finish(CrashesReport(crashes: crashes, bundleId: id, minutes: minutes), g)
+        }
     }
 
     struct Open: ParsableCommand {

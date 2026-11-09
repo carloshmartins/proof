@@ -12,6 +12,10 @@ and the layout of `~/.proof`.
   notifications (`--title`, `--body`, `--badge`, `--sound` or a `--payload` file), `permission grant|revoke|reset
   <service>` and `location <lat,lon>` / `--clear`. They run with `simctl` on the configured simulator, and
   `proof flow check` validates them.
+- Crashes are reported as crashes: when a `proof ui` step or flow step fails because the app crashed, the
+  error shows the exception, the file and line in the app's code and the crashed thread, read from the
+  simulator crash report, instead of "element not found". Flow results carry it as `crash`, and
+  `proof ui crashes` shows the app's latest crash.
 - Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
   first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.

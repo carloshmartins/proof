@@ -1,0 +1,116 @@
+{"app_name": "CrashApp", "timestamp": "2026-11-09 21:05:09.00 +0100", "bundleID": "dev.proof.CrashApp", "bug_type": "309", "name": "CrashApp"}
+{
+  "procName": "CrashApp",
+  "bundleInfo": {
+    "CFBundleIdentifier": "dev.proof.CrashApp"
+  },
+  "captureTime": "2026-11-09 21:05:08.9830 +0100",
+  "exception": {
+    "codes": "0x0000000000000001, 0x000000019827294c",
+    "rawCodes": [
+      1,
+      6847670604
+    ],
+    "type": "EXC_BREAKPOINT",
+    "signal": "SIGTRAP"
+  },
+  "termination": {
+    "indicator": "Trace/BPT trap: 5"
+  },
+  "faultingThread": 0,
+  "threads": [
+    {
+      "triggered": true,
+      "frames": [
+        {
+          "imageOffset": 1055052,
+          "symbol": "closure #1 in closure #1 in _assertionFailure(_:_:file:line:flags:)",
+          "symbolLocation": 460,
+          "imageIndex": 1
+        },
+        {
+          "imageOffset": 1053884,
+          "symbol": "_assertionFailure(_:_:file:line:flags:)",
+          "symbolLocation": 236,
+          "imageIndex": 1
+        },
+        {
+          "imageOffset": 957140,
+          "symbol": "Array._checkSubscript(_:wasNativeTypeChecked:)",
+          "symbolLocation": 152,
+          "imageIndex": 1
+        },
+        {
+          "imageOffset": 959252,
+          "symbol": "Array.subscript.getter",
+          "symbolLocation": 84,
+          "imageIndex": 1
+        },
+        {
+          "imageOffset": 7280,
+          "sourceLine": 14,
+          "sourceFile": "App.swift",
+          "symbol": "closure #1 in ContentView.body.getter",
+          "imageIndex": 0,
+          "symbolLocation": 792
+        },
+        {
+          "imageOffset": 7344632,
+          "symbol": "<deduplicated_symbol>",
+          "symbolLocation": 24,
+          "imageIndex": 2
+        },
+        {
+          "imageOffset": 14740316,
+          "symbol": "specialized static MainActor.assumeIsolated<A>(_:file:line:)",
+          "symbolLocation": 132,
+          "imageIndex": 2
+        },
+        {
+          "imageOffset": 14515936,
+          "symbol": "ButtonAction.callAsFunction()",
+          "symbolLocation": 396,
+          "imageIndex": 2
+        },
+        {
+          "imageOffset": 738912,
+          "symbol": "<deduplicated_symbol>",
+          "symbolLocation": 52,
+          "imageIndex": 2
+        },
+        {
+          "imageOffset": 6919956,
+          "symbol": "ButtonBehavior.ended()",
+          "symbolLocation": 224,
+          "imageIndex": 2
+        },
+        {
+          "imageOffset": 6943532,
+          "symbol": "partial apply for implicit closure #2 in implicit closure #1 in ButtonBehavior.body.getter",
+          "symbolLocation": 32,
+          "imageIndex": 2
+        },
+        {
+          "imageOffset": 14175568,
+          "symbol": "partial apply for closure #1 in closure #2 in closure #1 in _ButtonGesture.internalBody.getter",
+          "symbolLocation": 28,
+          "imageIndex": 2
+        }
+      ]
+    }
+  ],
+  "usedImages": [
+    {
+      "name": "CrashApp.debug.dylib",
+      "path": "/Users/USER/Library/Developer/CoreSimulator/Devices/DEVICE/data/Containers/Bundle/Application/APP/CrashApp.app/CrashApp.debug.dylib"
+    },
+    {
+      "name": "libswiftCore.dylib",
+      "path": "/Volumes/VOLUME/*/libswiftCore.dylib"
+    },
+    {
+      "name": "SwiftUI",
+      "path": "/Volumes/VOLUME/*/SwiftUI.framework/SwiftUI"
+    }
+  ]
+}
