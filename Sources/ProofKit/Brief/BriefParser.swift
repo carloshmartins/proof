@@ -45,6 +45,7 @@ public struct BriefResult: Codable, Report {
     public var duration: Double? = nil
     public var tail: [String]? = nil          // raw tail when failed with nothing recognised
     public var xcresult: String? = nil            // the result bundle the test results were read from
+    public var changedCoverage: ChangedCoverage? = nil   // proof test --coverage
     public var newWarnings: [Diagnostic]? = nil   // warnings this branch adds compared with `warningsBase`
     public var warningsBase: String? = nil
 
@@ -93,6 +94,7 @@ public struct BriefResult: Codable, Report {
             }
             if t.failures.count > maxItems { out.append("… +\(t.failures.count - maxItems) more failures") }
         }
+        if let changedCoverage { out.append(changedCoverage.text) }
         if let tail { out.append("--- last output ---"); out.append(contentsOf: tail) }
         return out.joined(separator: "\n")
     }

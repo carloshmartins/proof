@@ -28,6 +28,7 @@ proof test --only AppTests/LoginTests/testInvalidPassword
 proof test --stack               # every branch of the stack, bottom to top
 proof test --stack --stop-on-fail
 proof test --retry 3             # retry failing tests: FLAKY (passed on a retry) vs FAIL (failed every time)
+proof test --coverage            # which changed lines no test runs ("untested file: 18-24"): write tests for those
 xcodebuild … 2>&1 | proof brief  # condense output you already have
 proof stop                       # end the newest running build/test/run/flow cleanly (like Ctrl-C); --all for every one
 ```

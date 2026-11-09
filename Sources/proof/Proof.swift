@@ -229,6 +229,8 @@ struct Test: ParsableCommand {
     @Flag(help: "Stop the stack run at the first failing branch.") var stopOnFail = false
     @Option(help: "Run a failing test up to N times in all. One that passes on a retry is reported as flaky, not failed.")
     var retry: Int?
+    @Flag(help: "Report which of the lines this branch changed the tests run (against --compare, default the PR's base).")
+    var coverage = false
     @Option(help: "Count new warnings against this branch, or \"base\" for the branch this PR targets. \"none\" turns it off. With --stack, each branch is compared with the one below it.")
     var compare = BaseBranch.keyword
     @Flag(help: "Stream raw xcodebuild output to stderr.") var verbose = false
@@ -245,6 +247,7 @@ struct Test: ParsableCommand {
         } else {
             var o = BuildOptions()
             o.action = "test"; o.onlyTesting = only; o.skipTesting = skip; o.verbose = verbose; o.retry = retry
+            if coverage { o.coverageBase = BaseBranch.resolve(compare == "none" ? BaseBranch.keyword : compare, ctx: ctx) }
             o.compareWarnings = warningsBase(compare, ctx)
             let (result, _) = try XcodeBuild.run(ctx, o)
             try Session.saveResult(result, ctx: ctx)

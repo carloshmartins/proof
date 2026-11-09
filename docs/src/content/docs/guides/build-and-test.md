@@ -85,6 +85,26 @@ FAIL   LoginUITests/testSignIn  LoginUITests.swift:31  XCTAssertTrue failed - Si
 When the bundle can't be read, the results from the log stand. If you pass your own `-resultBundlePath`,
 proof leaves it alone.
 
+## Coverage of changed lines
+
+Overall coverage says little about a change. `--coverage` says which of the lines this branch changed the
+tests run:
+
+```sh
+proof test --coverage                    # against the branch this PR targets
+proof test --coverage --compare develop
+```
+
+```
+COVERAGE 12 of 40 changed lines run by tests (30%) vs main
+untested  Modules/Timer/Sources/PresetStore.swift: 18-24, 31
+untested  Modules/Timer/Sources/TimerModel.swift: 88
+```
+
+Changed lines are the diff from where the branch left its base, including uncommitted changes and new
+files. Only lines the compiler made code for count, and test files are left out. It turns on code coverage
+for that run (`-enableCodeCoverage YES`) and reads it from the result bundle.
+
 ## Flaky tests
 
 A test that fails sometimes is a different problem from one that's broken. Give failing tests more tries:

@@ -39,6 +39,9 @@ and the layout of `~/.proof`.
 - `proof test` reads the test results from the `.xcresult` bundle (Xcode 16+): whole failure messages,
   failing tests the log misses (a test that crashed), and the files failing tests attached, exported to
   `results/test-attachments` and listed under the failure. One bundle per branch, replaced every run.
+- `proof test --coverage` reports how many of the lines the branch changed the tests run, against the PR's
+  base (`--compare` for another branch), and lists the untested ones per file. Uncommitted changes and new
+  files count; test files don't.
 - Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
   first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.

@@ -11,6 +11,7 @@ public struct BuildOptions {
     public var keepWarnings = false
     public var compareWarnings: String? = nil   // branch to report new warnings against
     public var retry: Int? = nil                // test: run a failing test up to this many times in all
+    public var coverageBase: String? = nil      // test: report coverage of the lines changed since this branch
     public init() {}
 }
 
@@ -32,6 +33,7 @@ public enum XcodeBuild {
             args += opts.onlyTesting.map { "-only-testing:\($0)" }
             args += opts.skipTesting.map { "-skip-testing:\($0)" }
             if let n = opts.retry, n > 1 { args += ["-retry-tests-on-failure", "-test-iterations", String(n)] }
+            if opts.coverageBase != nil { args += ["-enableCodeCoverage", "YES"] }
         }
         // Tests also write a result bundle: exact failures and attachments (XCResult). One per action, replaced.
         let bundle = XCResult.bundlePath(sessionDir: ctx.sessionDir, action: opts.action)
@@ -69,7 +71,10 @@ public enum XcodeBuild {
 
         var brief = BriefParser(root: root, keepWarnings: true).parse(r.combined, action: opts.action, duration: duration)
         if brief.status == "unknown" { brief.status = r.ok ? "succeeded" : "failed" }
-        if ownBundle { XCResult.read(bundle, into: &brief) }
+        if ownBundle {
+            XCResult.read(bundle, into: &brief)
+            if let base = opts.coverageBase { brief.changedCoverage = Coverage.compute(bundle: bundle, base: base, root: root) }
+        }
         let fresh = brief.warnings ?? []
         if !opts.keepWarnings { brief.warnings = nil }
         if let all = Warnings.record(brief, allWarnings: fresh, log: r.combined, root: root, sessionDir: ctx.sessionDir),
