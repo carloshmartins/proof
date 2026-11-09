@@ -95,7 +95,7 @@ public struct BuildActivity: Equatable {
 /// Tells the person running proof that a long command is still working.
 ///
 /// On a terminal it keeps one live line on stderr: spinner, elapsed time and what xcodebuild is doing.
-/// Elsewhere (an agent, CI, a pipe) it prints a start line and a short heartbeat every 15 seconds,
+/// Elsewhere (an agent, CI, a pipe) it prints a start line with `detail` and a short heartbeat every 15 seconds,
 /// so nothing redraws in place. stdout is never touched, so `--json` output stays clean.
 public final class ProgressLine {
     public let title: String
@@ -120,9 +120,9 @@ public final class ProgressLine {
         self.interactive = interactive
         self.heartbeat = heartbeat
         guard Self.enabled else { finished = true; return }
-        if !interactive || detail != nil {
-            Output.stderr(title + "…" + (detail.map { " (\($0))" } ?? ""))
-        }
+        // A terminal sees the live line only; the start line (and its detail, e.g. the log path) is for readers
+        // that can't watch a line redraw.
+        if !interactive { Output.stderr(title + "…" + (detail.map { " (\($0))" } ?? "")) }
         let t = DispatchSource.makeTimerSource(queue: .global())
         t.schedule(deadline: .now(), repeating: interactive ? 0.1 : 1)
         t.setEventHandler { [weak self] in self?.tick() }

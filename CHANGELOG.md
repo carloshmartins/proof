@@ -14,7 +14,7 @@ and the layout of `~/.proof`.
 - Progress while xcodebuild runs: `proof build`, `test`, `run`, stack runs and the runner build print what
   they are doing on stderr (a live line with elapsed time, the file being compiled and test counts in a
   terminal; a start line and an update every 15 seconds otherwise), so a long build no longer looks stuck.
-  The raw log is written as the build runs and its path is printed, for `tail -f`. `PROOF_NO_PROGRESS=1`
+  The raw log is written as the build runs; outside a terminal its path is printed, for `tail -f`. `PROOF_NO_PROGRESS=1`
   turns it off.
 
 ### Fixed

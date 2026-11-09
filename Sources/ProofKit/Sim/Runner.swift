@@ -56,7 +56,7 @@ public enum Runner {
         let stamp = sourceStamp()
         let built = (try? String(contentsOfFile: stampFile, encoding: .utf8)) ?? ""
         if !force, built == stamp, xctestrun() != nil { return }
-        let progress = ProgressLine("building proof runner", detail: "one time, ~1 min")
+        let progress = ProgressLine("building proof runner (one time, ~1 min)")
         let r = try Shell.run(["xcodebuild", "build-for-testing", "-project", project, "-scheme", "ProofRunner",
                                "-destination", "generic/platform=iOS Simulator",
                                "-derivedDataPath", Paths.runnerDerivedData], onOutput: progress.feed)
