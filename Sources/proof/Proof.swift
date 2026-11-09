@@ -223,6 +223,8 @@ struct Test: ParsableCommand {
     @Option(help: "Explicit stack branches, bottom to top, comma separated.") var branches: String?
     @Option(help: "Start the stack run at this branch.") var from: String?
     @Flag(help: "Stop the stack run at the first failing branch.") var stopOnFail = false
+    @Option(help: "Run a failing test up to N times in all. One that passes on a retry is reported as flaky, not failed.")
+    var retry: Int?
     @Option(help: "Count new warnings against this branch, or \"base\" for the branch this PR targets. \"none\" turns it off. With --stack, each branch is compared with the one below it.")
     var compare = BaseBranch.keyword
     @Flag(help: "Stream raw xcodebuild output to stderr.") var verbose = false
@@ -233,12 +235,12 @@ struct Test: ParsableCommand {
         if stack {
             var o = StackOptions()
             o.branches = branches?.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-            o.from = from; o.stopOnFail = stopOnFail; o.onlyTesting = only; o.verbose = verbose
+            o.from = from; o.stopOnFail = stopOnFail; o.onlyTesting = only; o.verbose = verbose; o.retry = retry
             let report = try StackRunner.run(ctx, o)
             try finish(report, g, failed: !report.ok)
         } else {
             var o = BuildOptions()
-            o.action = "test"; o.onlyTesting = only; o.skipTesting = skip; o.verbose = verbose
+            o.action = "test"; o.onlyTesting = only; o.skipTesting = skip; o.verbose = verbose; o.retry = retry
             o.compareWarnings = warningsBase(compare, ctx)
             let (result, _) = try XcodeBuild.run(ctx, o)
             try Session.saveResult(result, ctx: ctx)

@@ -10,6 +10,7 @@ public struct BuildOptions {
     public var verbose = false                  // stream raw output to stderr
     public var keepWarnings = false
     public var compareWarnings: String? = nil   // branch to report new warnings against
+    public var retry: Int? = nil                // test: run a failing test up to this many times in all
     public init() {}
 }
 
@@ -30,6 +31,7 @@ public enum XcodeBuild {
             if let plan = ctx.config.testPlan { args += ["-testPlan", plan] }
             args += opts.onlyTesting.map { "-only-testing:\($0)" }
             args += opts.skipTesting.map { "-skip-testing:\($0)" }
+            if let n = opts.retry, n > 1 { args += ["-retry-tests-on-failure", "-test-iterations", String(n)] }
         }
         args += ctx.config.extraBuildArgs ?? []
         args += opts.extra

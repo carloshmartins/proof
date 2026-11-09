@@ -15,11 +15,22 @@ public struct TestFailure: Codable, Hashable {
     public var message: String?
 }
 
+/// A test that failed and then passed when retried (`proof test --retry`).
+public struct FlakyTest: Codable, Equatable {
+    public let test: String
+    public let failedRuns: Int
+    public let runs: Int
+    public var file: String?
+    public var line: Int?
+    public var message: String?   // the first failure
+}
+
 public struct TestSummary: Codable, Equatable {
-    public var passed = 0
+    public var passed = 0                     // flaky tests count as passed
     public var failed = 0
     public var skipped = 0
     public var failures: [TestFailure] = []
+    public var flaky: [FlakyTest]? = nil      // only when some test needed a retry to pass
     public var total: Int { passed + failed + skipped }
 }
 
@@ -63,7 +74,14 @@ public struct BriefResult: Codable, Report {
         if let t = tests {
             var line = "TESTS \(t.passed) passed · \(t.failed) failed"
             if t.skipped > 0 { line += " · \(t.skipped) skipped" }
+            if let flaky = t.flaky, !flaky.isEmpty { line += " · \(flaky.count) flaky" }
             out.append(line)
+            for f in t.flaky?.prefix(maxItems) ?? [] {
+                var s = "FLAKY  \(f.test)  failed \(f.failedRuns) of \(f.runs) runs"
+                if let file = f.file { s += "  \((file as NSString).lastPathComponent)\(f.line.map { ":\($0)" } ?? "")" }
+                if let m = f.message { s += "  \(m)" }
+                out.append(s)
+            }
             for f in t.failures.prefix(maxItems) {
                 var s = "FAIL   \(f.test)"
                 if let file = f.file { s += "  \((file as NSString).lastPathComponent)\(f.line.map { ":\($0)" } ?? "")" }
@@ -141,6 +159,7 @@ public struct BriefParser {
         var testStatus: [String: String] = [:]   // test -> passed/failed/skipped (last wins; retries)
         var testOrder: [String] = []
         var failureInfo: [String: TestFailure] = [:]
+        var runs: [String: (failed: Int, total: Int)] = [:]   // per test, over retries
         var undefinedSymbols: [String] = []
         var inUndefined = false
         var statusMarker: String?
@@ -153,10 +172,14 @@ public struct BriefParser {
                 errors.append(d)
             }
         }
-        func setTest(_ name: String, _ status: String) {
+        func setTest(_ name: String, _ status: String, countRun: Bool = true) {
             sawTests = true
             if testStatus[name] == nil { testOrder.append(name) }
             testStatus[name] = status
+            if countRun && status != "skipped" {
+                let r = runs[name] ?? (0, 0)
+                runs[name] = (r.failed + (status == "failed" ? 1 : 0), r.total + 1)
+            }
         }
 
         for raw in output.split(separator: "\n", omittingEmptySubsequences: false) {
@@ -205,7 +228,7 @@ public struct BriefParser {
                     var f = failureInfo[test] ?? TestFailure(test: test)
                     if f.message == nil { f.file = rel(m[1]); f.line = Int(m[2]); f.message = Self.clean(msg) }
                     failureInfo[test] = f
-                    if testStatus[test] == nil { setTest(test, "failed") }
+                    if testStatus[test] == nil { setTest(test, "failed", countRun: false) }   // its "failed" line counts the run
                 } else {
                     add(Diagnostic(kind: m[3], file: rel(m[1]), line: Int(m[2]), column: nil, message: Self.clean(message)))
                 }
@@ -235,7 +258,13 @@ public struct BriefParser {
         if sawTests {
             for name in testOrder {
                 switch testStatus[name] {
-                case "passed": tests.passed += 1
+                case "passed":
+                    tests.passed += 1
+                    if let r = runs[name], r.failed > 0 {
+                        let info = failureInfo[name]
+                        tests.flaky = (tests.flaky ?? []) + [FlakyTest(test: name, failedRuns: r.failed, runs: r.total,
+                                                                       file: info?.file, line: info?.line, message: info?.message)]
+                    }
                 case "skipped": tests.skipped += 1
                 default:
                     tests.failed += 1

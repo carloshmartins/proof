@@ -10,7 +10,7 @@ sidebar:
 Run tests on this branch, or on every branch of the stack with --stack.
 
 ```sh
-proof test [--json] [--stack] [--only <only> ...] [--skip <skip> ...] [--branches <branches>] [--from <from>] [--stop-on-fail] [--compare <compare>] [--verbose]
+proof test [--json] [--stack] [--only <only> ...] [--skip <skip> ...] [--branches <branches>] [--from <from>] [--stop-on-fail] [--retry <retry>] [--compare <compare>] [--verbose]
 ```
 
 | Argument | Description |
@@ -21,6 +21,7 @@ proof test [--json] [--stack] [--only <only> ...] [--skip <skip> ...] [--branche
 | `--branches <branches>` | Explicit stack branches, bottom to top, comma separated. |
 | `--from <from>` | Start the stack run at this branch. |
 | `--stop-on-fail` | Stop the stack run at the first failing branch. |
+| `--retry <retry>` | Run a failing test up to N times in all. One that passes on a retry is reported as flaky, not failed. |
 | `--compare <compare>` | Count new warnings against this branch, or "base" for the branch this PR targets. "none" turns it off. With --stack, each branch is compared with the one below it. Default: `base`. |
 | `--verbose` | Stream raw xcodebuild output to stderr. |
 

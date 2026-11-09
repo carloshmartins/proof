@@ -20,6 +20,9 @@ and the layout of `~/.proof`.
   branch its PR targets (`2 new vs main`) and list them, matched by file and message. Each branch's warnings
   are kept up to date across incremental builds. `--compare <branch|none>` changes the branch. `proof test
   --stack` marks `+N warnings` on the PR that added them.
+- Flaky tests: `proof test --retry N` (and `--stack --retry N`) runs a failing test up to N times. One that
+  passes on a retry is listed as `FLAKY` with its first failure and doesn't fail the run; one that fails every
+  time stays a `FAIL`. `--json` has them in `tests.flaky`.
 - Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
   first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.

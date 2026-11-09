@@ -1,0 +1,19 @@
+Retrying tests on failure. Running tests repeatedly up to 3 times.
+Test Suite 'All tests' started at 2026-11-09 10:00:00.000.
+Test Case '-[TimerTests.FlakyTests testAlwaysFails]' started (Iteration 1 of 3).
+/Users/me/dev/App/Tests/FlakyTests.swift:9: error: -[TimerTests.FlakyTests testAlwaysFails] : XCTAssertEqual failed: ("1") is not equal to ("2") - always broken
+Test Case '-[TimerTests.FlakyTests testAlwaysFails]' failed (0.017 seconds).
+Test Case '-[TimerTests.FlakyTests testAlwaysFails]' started (Iteration 2 of 3).
+/Users/me/dev/App/Tests/FlakyTests.swift:9: error: -[TimerTests.FlakyTests testAlwaysFails] : XCTAssertEqual failed: ("1") is not equal to ("2") - always broken
+Test Case '-[TimerTests.FlakyTests testAlwaysFails]' failed (0.004 seconds).
+Test Case '-[TimerTests.FlakyTests testAlwaysFails]' started (Iteration 3 of 3).
+/Users/me/dev/App/Tests/FlakyTests.swift:9: error: -[TimerTests.FlakyTests testAlwaysFails] : XCTAssertEqual failed: ("1") is not equal to ("2") - always broken
+Test Case '-[TimerTests.FlakyTests testAlwaysFails]' failed (0.003 seconds).
+Test Case '-[TimerTests.FlakyTests testFine]' started (Iteration 1 of 3).
+Test Case '-[TimerTests.FlakyTests testFine]' passed (0.000 seconds).
+Test Case '-[TimerTests.FlakyTests testPassesOnSecondTry]' started (Iteration 1 of 3).
+/Users/me/dev/App/Tests/FlakyTests.swift:7: error: -[TimerTests.FlakyTests testPassesOnSecondTry] : XCTAssertGreaterThan failed: ("1") is not greater than ("1") - first attempt fails
+Test Case '-[TimerTests.FlakyTests testPassesOnSecondTry]' failed (0.010 seconds).
+Test Case '-[TimerTests.FlakyTests testPassesOnSecondTry]' started (Iteration 2 of 3).
+Test Case '-[TimerTests.FlakyTests testPassesOnSecondTry]' passed (0.000 seconds).
+** TEST FAILED **

@@ -70,6 +70,26 @@ Swift Testing results are all understood.
 
 To test every branch of a stacked PR, see [Stacked pull requests](../stacks/).
 
+## Flaky tests
+
+A test that fails sometimes is a different problem from one that's broken. Give failing tests more tries:
+
+```sh
+proof test --retry 3            # a failing test runs up to 3 times in all
+proof test --stack --retry 3
+```
+
+```
+TEST FAILED · 48.2s
+TESTS 181 passed · 1 failed · 1 flaky
+FLAKY  SyncTests/testReconnect  failed 1 of 2 runs  SyncTests.swift:31  Asynchronous wait failed: Exceeded timeout of 1 seconds
+FAIL   TimerTests/testPresetPersists  TimerTests.swift:57  XCTAssertEqual failed: ("25") is not equal to ("15")
+```
+
+A test that passes on a retry counts as passed and is listed as `FLAKY` with its first failure; one that
+fails every time is a `FAIL`. Only flaky tests don't fail the run. This uses xcodebuild's
+`-retry-tests-on-failure`.
+
 ## Condense output you already have
 
 ```sh
