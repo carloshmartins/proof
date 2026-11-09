@@ -151,16 +151,28 @@ public enum FlowEngine {
 
     /// Runs a flow, stopping at the first failure unless `continueOnFailure`. On failure it snaps
     /// the screen as "<flow>-failed" so the agent can see what was actually there.
-    /// Replays the flow as is, then once per `options.variants`, each relaunched in its look.
-    public static func runVariants(_ flow: Flow, ctx: Context, options: FlowRunOptions) throws -> FlowVariantsReport {
+    /// Replays the flow as is, then once per `options.variants`, each relaunched in its look. A device
+    /// variant installs the app this checkout built on that simulator and moves the runner there.
+    /// `product` is the app to install on other devices; by default the one this checkout built.
+    public static func runVariants(_ flow: Flow, ctx: Context, options: FlowRunOptions,
+                                   product built: XcodeBuild.AppProduct? = nil) throws -> FlowVariantsReport {
         var runs = [try run(flow, ctx: ctx, options: options)]
+        var product = built
         for v in options.variants {
             if Interrupt.isRequested { break }
             var o = options
             o.variant = v
             o.relaunch = true
             o.video = false
-            runs.append(try run(flow, ctx: ctx, options: o))
+            var vctx = ctx
+            if let device = v.device {
+                vctx.config.simulator = device
+                let sim = try Simulators.resolveBooted(device)
+                if product == nil { product = try XcodeBuild.appProduct(ctx) }
+                try Shell.checked(["xcrun", "simctl", "install", sim.udid, product!.path])
+                if vctx.config.bundleId == nil { vctx.config.bundleId = product!.bundleId }
+            }
+            runs.append(try run(flow, ctx: vctx, options: o))
         }
         return FlowVariantsReport(runs: runs)
     }

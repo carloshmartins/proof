@@ -52,7 +52,7 @@ public enum Baseline {
             o.relaunch = true
             o.compareWith = nil
             o.video = false
-            let runs = try FlowEngine.runVariants(flow, ctx: bctx, options: o).runs
+            let runs = try FlowEngine.runVariants(flow, ctx: bctx, options: o, product: product).runs
             let steps = runs.flatMap(\.steps)
             summary = "baseline: \(base) (\(prepared.sha)) · \(steps.filter { $0.status == "ok" }.count)/\(steps.count) steps ok"
             if let failed = runs.first(where: { $0.failedAt != nil }) {

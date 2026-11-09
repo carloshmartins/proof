@@ -45,6 +45,9 @@ and the layout of `~/.proof`.
 - Pixel diff: a snap compared with another branch also compares the screenshots, so colour, image and
   layout changes the accessibility tree can't see show up: the share of pixels changed, the box around
   them, and `<name>.diff.png` with the changes in red, in the report next to before and after.
+- `proof flow run <flow> --devices "iPhone SE (3rd generation),iPad Air 13-inch (M3)"` replays the flow on more
+  simulators, installing the app this checkout built on each; snaps are named `<name>@<device>` and compare
+  with the same device on another branch.
 - Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
   first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.

@@ -93,6 +93,16 @@ proof flow run home --variants dark,ax5 --compare base
   `proof flow run --variants`, which replays the whole flow once per variant from a fresh launch.
 - In a flow, `snap home --variants dark,ax5` works as a step too.
 
+Other devices work the same way: `--devices` replays the flow on more simulators, with the app this checkout
+built installed on each, and names the snaps after the device:
+
+```sh
+proof flow run home --devices "iPhone SE (3rd generation),iPad Air 13-inch (M3)" --compare base
+```
+
+`home@iphone-se-3rd-generation`, `home@ipad-air-13-inch-m3`. Use the names `xcrun simctl list devices` shows;
+proof boots them as needed and leaves them running.
+
 ## Where snaps live
 
 `~/.proof/sessions/<repo>/<branch>/snaps/<name>.png`, with `<name>.txt` (the tree as text) and

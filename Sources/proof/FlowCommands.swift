@@ -100,6 +100,8 @@ struct FlowCommand: ParsableCommand {
         @Flag(help: "With --compare: never replay the flow on the compared branch; compare with the snaps it has.") var noBaseline = false
         @Option(help: "Replay the flow again per variant, e.g. dark,ax5,ar,rtl (join with + to combine). Snaps are named <name>@<variant>.")
         var variants: String?
+        @Option(help: "Replay the flow again on these simulators, comma separated, e.g. \"iPhone SE (3rd generation),iPad Air 13-inch (M3)\". Snaps are named <name>@<device>.")
+        var devices: String?
 
         func run() throws {
             var ctx = try Context.current()
@@ -115,8 +117,8 @@ struct FlowCommand: ParsableCommand {
             o.compareWith = compare
             o.video = video
             o.relaunch = relaunch
-            o.variants = try SnapVariant.parseList(variants)
-            if stack && !o.variants.isEmpty { throw ValidationError("--variants doesn't work with --stack yet") }
+            o.variants = try SnapVariant.parseList(variants) + SnapVariant.parseDevices(devices)
+            if stack && !o.variants.isEmpty { throw ValidationError("--variants and --devices don't work with --stack yet") }
             if stack {
                 var s = StackOptions()
                 s.branches = branches?.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }

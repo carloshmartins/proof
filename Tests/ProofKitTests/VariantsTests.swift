@@ -55,4 +55,15 @@ final class VariantsTests: XCTestCase {
         XCTAssertEqual(Baseline.snapNames(flow, variants: [try SnapVariant.parse("ar")]),
                        ["home", "home@dark", "settings", "home@ar", "settings@ar"])
     }
+
+    func testDevices() {
+        let d = SnapVariant.parseDevices("iPhone SE (3rd generation), iPad Air 13-inch (M3)")
+        XCTAssertEqual(d.map(\.name), ["iphone-se-3rd-generation", "ipad-air-13-inch-m3"])
+        XCTAssertEqual(d.first?.device, "iPhone SE (3rd generation)")
+        XCTAssertTrue(d[0].needsRelaunch)
+        XCTAssertTrue(d[0].launchArguments.isEmpty)
+        XCTAssertEqual(d[0].snapName("home"), "home@iphone-se-3rd-generation")
+        XCTAssertEqual(SnapVariant.parseDevices(nil), [])
+        XCTAssertEqual(SnapVariant.parseDevices(" , "), [])
+    }
 }

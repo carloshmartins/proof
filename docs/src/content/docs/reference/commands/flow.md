@@ -32,7 +32,7 @@ snap home
 Replay a flow on this branch, or on every branch of the stack with --stack.
 
 ```sh
-proof flow run [--json] <flow> [--var <var> ...] [--continue] [--compare <compare>] [--video] [--relaunch] [--stack] [--branches <branches>] [--from <from>] [--stop-on-fail] [--verbose] [--fresh-baseline] [--no-baseline] [--variants <variants>]
+proof flow run [--json] <flow> [--var <var> ...] [--continue] [--compare <compare>] [--video] [--relaunch] [--stack] [--branches <branches>] [--from <from>] [--stop-on-fail] [--verbose] [--fresh-baseline] [--no-baseline] [--variants <variants>] [--devices <devices>]
 ```
 
 | Argument | Description |
@@ -51,6 +51,7 @@ proof flow run [--json] <flow> [--var <var> ...] [--continue] [--compare <compar
 | `--fresh-baseline` | With --compare: replay the flow on the compared branch first even if its snaps exist. |
 | `--no-baseline` | With --compare: never replay the flow on the compared branch; compare with the snaps it has. |
 | `--variants <variants>` | Replay the flow again per variant, e.g. dark,ax5,ar,rtl (join with + to combine). Snaps are named <name>@<variant>. |
+| `--devices <devices>` | Replay the flow again on these simulators, comma separated, e.g. "iPhone SE (3rd generation),iPad Air 13-inch (M3)". Snaps are named <name>@<device>. |
 
 **JSON output** (`--json`):
 

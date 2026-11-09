@@ -9,6 +9,7 @@ public struct SnapVariant: Equatable {
     public var contentSize: String? = nil     // a `simctl ui content_size` value
     public var locale: String? = nil          // "ar", "pt-BR"
     public var rightToLeft = false
+    public var device: String? = nil          // another simulator, by name or UDID
 
     /// Text sizes by short name, smallest to largest.
     public static let sizes: [(String, String)] = [
@@ -18,8 +19,28 @@ public struct SnapVariant: Equatable {
         ("ax4", "accessibility-extra-extra-large"), ("ax5", "accessibility-extra-extra-extra-large"),
     ]
 
-    /// Locale and right-to-left only apply when the app launches.
-    public var needsRelaunch: Bool { locale != nil || rightToLeft }
+    /// Locale, right-to-left and another device only apply when the app launches.
+    public var needsRelaunch: Bool { locale != nil || rightToLeft || device != nil }
+
+    /// A run on another simulator: "iPhone SE (3rd generation)" → snaps named `<name>@iphone-se-3rd-generation`.
+    public static func forDevice(_ name: String) -> SnapVariant {
+        SnapVariant(name: slug(name), device: name.trimmingCharacters(in: .whitespaces))
+    }
+
+    /// Comma-separated simulator names.
+    public static func parseDevices(_ text: String?) -> [SnapVariant] {
+        guard let text else { return [] }
+        return text.split(separator: ",").map { forDevice(String($0)) }.filter { !$0.name.isEmpty }
+    }
+
+    static func slug(_ s: String) -> String {
+        var out = ""
+        for c in s.lowercased() {
+            if c.isLetter || c.isNumber { out.append(c) } else if !out.isEmpty, out.last != "-" { out.append("-") }
+        }
+        while out.hasSuffix("-") { out.removeLast() }
+        return out
+    }
 
     public static func parse(_ text: String) throws -> SnapVariant {
         let spec = text.trimmingCharacters(in: .whitespaces)
