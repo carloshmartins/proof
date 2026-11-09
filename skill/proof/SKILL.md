@@ -105,6 +105,8 @@ Use `expect` after each navigation so the flow fails where the problem is, not t
 proof snap login                 # screenshot + tree for this branch
 proof snap login --compare base  # plus a tree diff against the "login" snap of the branch this PR targets
 proof snap login --compare develop  # or name any branch
+proof snap login --variants dark,ax5,dark+ax3  # also in dark mode / large text: login@dark, login@ax5, …
+proof flow run login --variants ar,rtl         # replay per locale / right-to-left (needs a relaunch)
                                  # snaps/<name>.json keeps the nodes with frames (--json: "nodes")
 proof packet                     # writes report.md/report.html for this branch
 proof packet --open              # open the HTML report (screens side by side)

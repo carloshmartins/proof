@@ -98,6 +98,8 @@ struct FlowCommand: ParsableCommand {
         @Flag(help: "Stream raw xcodebuild output to stderr (stack builds).") var verbose = false
         @Flag(help: "With --compare: replay the flow on the compared branch first even if its snaps exist.") var freshBaseline = false
         @Flag(help: "With --compare: never replay the flow on the compared branch; compare with the snaps it has.") var noBaseline = false
+        @Option(help: "Replay the flow again per variant, e.g. dark,ax5,ar,rtl (join with + to combine). Snaps are named <name>@<variant>.")
+        var variants: String?
 
         func run() throws {
             var ctx = try Context.current()
@@ -113,6 +115,8 @@ struct FlowCommand: ParsableCommand {
             o.compareWith = compare
             o.video = video
             o.relaunch = relaunch
+            o.variants = try SnapVariant.parseList(variants)
+            if stack && !o.variants.isEmpty { throw ValidationError("--variants doesn't work with --stack yet") }
             if stack {
                 var s = StackOptions()
                 s.branches = branches?.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
@@ -123,13 +127,19 @@ struct FlowCommand: ParsableCommand {
                 let loaded = try Flow.load(flow, repo: ctx.repo)
                 // Before and after in one command: if the compared branch lacks this flow's snaps, take them there first.
                 if let base = BaseBranch.resolve(compare, ctx: ctx), !noBaseline,
-                   Baseline.isNeeded(loaded, base: base, current: ctx.branch, repo: ctx.repo, vars: o.vars, fresh: freshBaseline) {
+                   Baseline.isNeeded(loaded, base: base, current: ctx.branch, repo: ctx.repo, vars: o.vars,
+                                     variants: o.variants, fresh: freshBaseline) {
                     try Baseline.capture(&ctx, flow: loaded, base: base, options: o, verbose: verbose)
                     o.compareWith = base
                     o.relaunch = true
                 }
-                let report = try FlowEngine.run(loaded, ctx: ctx, options: o)
-                try finish(report, g, failed: !report.ok)
+                if o.variants.isEmpty {
+                    let report = try FlowEngine.run(loaded, ctx: ctx, options: o)
+                    try finish(report, g, failed: !report.ok)
+                } else {
+                    let report = try FlowEngine.runVariants(loaded, ctx: ctx, options: o)
+                    try finish(report, g, failed: !report.ok)
+                }
             }
         }
     }
@@ -170,6 +180,7 @@ struct FlowCommand: ParsableCommand {
                     let step = try s.substituting(v)
                     let bundle = ctx.config.bundleId ?? "check.bundle"
                     if FlowStep.simulatorActions.contains(step.action) { _ = try SimState.command(for: step, udid: "check", bundleId: bundle) }
+                    else if step.action == "snap" { _ = try SnapVariant.parseList(step.option("variants")) }
                     else { _ = try step.runnerRequest(defaultBundleId: bundle) }
                 }
                 catch {

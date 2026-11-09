@@ -63,6 +63,32 @@ moved); `--no-baseline` never does.
 With a single `proof snap --compare`, there is no flow to replay: snap the same screen on the other branch
 yourself, or use a flow. For every branch of a stack, use `proof flow run <flow> --stack`.
 
+## Dark mode, text sizes and languages
+
+Bugs that only show in dark mode, at large text sizes or in another language are easy for a change to add
+and hard to spot. `--variants` snaps the same screen in other looks:
+
+```sh
+proof snap home --variants dark,ax5,dark+ax3        # appearance and text size, switched live
+proof flow run home --variants dark,ar,ar+rtl       # the flow again per variant, relaunched
+proof flow run home --variants dark,ax5 --compare base
+```
+
+| Variant | What it sets |
+|---|---|
+| `light`, `dark` | Appearance |
+| `xs` `s` `m` `l` `xl` `xxl` `xxxl`, `ax1`…`ax5` | Dynamic Type size (`l` is the default, `ax1`–`ax5` are the accessibility sizes) |
+| a locale: `ar`, `de`, `pt-BR`, … | Language and region, at launch (`-AppleLanguages`) |
+| `rtl` | Right-to-left layout, at launch |
+
+- Join with `+` to combine: `dark+ax5`, `ar+rtl`.
+- A variant snap is named `<name>@<variant>` (`home@dark`), so `--compare` diffs it with the same variant on
+  the other branch, and the report shows each one.
+- `proof snap --variants` takes appearance and text size only: they change while the app runs, and the
+  simulator's own look is put back afterwards. A locale or `rtl` needs a relaunch, so it goes through
+  `proof flow run --variants`, which replays the whole flow once per variant from a fresh launch.
+- In a flow, `snap home --variants dark,ax5` works as a step too.
+
 ## Where snaps live
 
 `~/.proof/sessions/<repo>/<branch>/snaps/<name>.png`, with `<name>.txt` (the tree as text) and

@@ -23,6 +23,10 @@ and the layout of `~/.proof`.
 - Flaky tests: `proof test --retry N` (and `--stack --retry N`) runs a failing test up to N times. One that
   passes on a retry is listed as `FLAKY` with its first failure and doesn't fail the run; one that fails every
   time stays a `FAIL`. `--json` has them in `tests.flaky`.
+- Snap matrix: `proof snap <name> --variants dark,ax5,dark+ax3` also snaps the screen in other appearances
+  and Dynamic Type sizes (switched live, then put back), and `proof flow run <flow> --variants dark,ar,rtl`
+  replays the flow once more per variant, relaunched in a locale or right-to-left when asked. Variant snaps
+  are named `<name>@<variant>` and compare with the same variant on another branch, baselines included.
 - Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
   first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.

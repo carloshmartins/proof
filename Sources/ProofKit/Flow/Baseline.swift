@@ -5,24 +5,30 @@ import Foundation
 /// worktree, built and installed, the flow runs, and then the current checkout is rebuilt and reinstalled
 /// (uncommitted changes included) so the real run compares against fresh snaps.
 public enum Baseline {
-    /// The snap names a flow takes, in order, after includes. Names with `${VAR}` are resolved with `vars`.
-    public static func snapNames(_ flow: Flow, vars: [String: String] = [:]) -> [String] {
-        flow.steps.filter { $0.action == "snap" }.compactMap { $0.positional.first }.map { name in
-            vars.reduce(name) { $0.replacingOccurrences(of: "${\($1.key)}", with: $1.value) }
+    /// The snap names a flow takes, in order, after includes, with each snap step's own `--variants` and
+    /// then every name again per run variant. Names with `${VAR}` are resolved with `vars`.
+    public static func snapNames(_ flow: Flow, vars: [String: String] = [:], variants: [SnapVariant] = []) -> [String] {
+        let snaps = flow.steps.filter { $0.action == "snap" }.compactMap { step in
+            step.positional.first.map { raw in (vars.reduce(raw) { $0.replacingOccurrences(of: "${\($1.key)}", with: $1.value) }, step) }
         }
+        let once = snaps.flatMap { name, step in
+            [name] + ((try? SnapVariant.parseList(step.option("variants"))) ?? []).map { $0.snapName(name) }
+        }
+        return once + variants.flatMap { v in snaps.map { v.snapName($0.0) } }
     }
 
     /// Snap names of `flow` that `branch` doesn't have yet.
-    public static func missing(_ flow: Flow, on branch: String, repo: String, vars: [String: String] = [:]) -> [String] {
+    public static func missing(_ flow: Flow, on branch: String, repo: String, vars: [String: String] = [:],
+                               variants: [SnapVariant] = []) -> [String] {
         let have = Set(Snaps.load(sessionDir: Paths.session(repo: repo, branch: branch)).map(\.name))
-        return snapNames(flow, vars: vars).filter { !have.contains($0) }
+        return snapNames(flow, vars: vars, variants: variants).filter { !have.contains($0) }
     }
 
     /// Whether to replay the flow on `base` first.
     public static func isNeeded(_ flow: Flow, base: String, current: String, repo: String,
-                                vars: [String: String] = [:], fresh: Bool) -> Bool {
+                                vars: [String: String] = [:], variants: [SnapVariant] = [], fresh: Bool) -> Bool {
         guard base != current, !snapNames(flow, vars: vars).isEmpty else { return false }
-        return fresh || !missing(flow, on: base, repo: repo, vars: vars).isEmpty
+        return fresh || !missing(flow, on: base, repo: repo, vars: vars, variants: variants).isEmpty
     }
 
     /// Replays `flow` on `base` in the stack worktree, then reinstalls the current checkout's app.
@@ -46,9 +52,12 @@ public enum Baseline {
             o.relaunch = true
             o.compareWith = nil
             o.video = false
-            let report = try FlowEngine.run(flow, ctx: bctx, options: o)
-            summary = "baseline: \(base) (\(prepared.sha)) · \(report.steps.filter { $0.status == "ok" }.count)/\(report.steps.count) steps ok"
-            if let failed = report.failedAt { summary += " · failed at step \(failed), later snaps are missing" }
+            let runs = try FlowEngine.runVariants(flow, ctx: bctx, options: o).runs
+            let steps = runs.flatMap(\.steps)
+            summary = "baseline: \(base) (\(prepared.sha)) · \(steps.filter { $0.status == "ok" }.count)/\(steps.count) steps ok"
+            if let failed = runs.first(where: { $0.failedAt != nil }) {
+                summary += " · \(failed.flow) failed at step \(failed.failedAt!), later snaps are missing"
+            }
         } else {
             summary = "baseline: \(base) (\(prepared.sha)) · build failed (\(prepared.build.errors.count) error\(prepared.build.errors.count == 1 ? "" : "s")), comparing without it"
         }

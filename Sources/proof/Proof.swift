@@ -286,8 +286,11 @@ struct Snap: ParsableCommand {
     @Argument(help: "Screen name, e.g. login or settings-empty.") var name: String
     @Option(help: "Diff the tree against the same-named snap of a branch: a name like main or develop, or \"base\" for the branch this PR targets.") var compare: String?
 
+    @Option(help: "Also snap the screen in these looks, e.g. dark,ax5,dark+ax3 (appearance and text size). Snaps are named <name>@<variant>; the simulator's look is put back after.")
+    var variants: String?
+
     func run() throws {
-        try performStep(["snap", name] + (compare.map { ["--compare", $0] } ?? []), g)
+        try performStep(["snap", name] + (compare.map { ["--compare", $0] } ?? []) + (variants.map { ["--variants", $0] } ?? []), g)
     }
 }
 
