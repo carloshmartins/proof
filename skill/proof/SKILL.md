@@ -108,6 +108,7 @@ proof snap login --compare base  # plus a tree diff against the "login" snap of 
 proof snap login --compare develop  # or name any branch
 proof snap login --variants dark,ax5,dark+ax3  # also in dark mode / large text: login@dark, login@ax5, …
 proof flow run login --variants ar,rtl         # replay per locale / right-to-left (needs a relaunch)
+proof bisect --flow login --snap login         # which commit changed the login screen (also --test <id>)
 proof flow run login --devices "iPhone SE (3rd generation),iPad Air 13-inch (M3)"   # small phone, tablet
                                  # snaps/<name>.json keeps the nodes with frames (--json: "nodes")
 proof packet                     # writes report.md/report.html for this branch

@@ -440,6 +440,43 @@ struct ReviewCommand: ParsableCommand {
     }
 }
 
+struct BisectCommand: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "bisect",
+        abstract: "Find the commit that broke a flow, changed a screen or made a test fail.",
+        discussion: """
+        A binary search between --good (default: where this branch left its base) and --bad (default: HEAD).
+        Each commit is built in the stack worktree; your checkout and git's own bisect are untouched.
+        Commits that don't build are skipped.
+          proof bisect --flow onboarding                  first commit where the flow fails
+          proof bisect --flow home --snap home            first commit where the home screen's tree changed
+          proof bisect --test TimerTests/testPresets      first commit where the test fails
+        """)
+    @OptionGroup var g: Global
+    @Option(help: "Flow to replay on each commit.") var flow: String?
+    @Option(help: "With --flow: look for the first commit where this snap's tree differs from the good commit's.") var snap: String?
+    @Option(help: "Test identifier (Target/Class/test) to run on each commit.") var test: String?
+    @Option(help: "A commit or branch where things were right.") var good: String?
+    @Option(help: "A commit or branch where they're wrong (default HEAD).") var bad: String?
+    @Flag(help: "Stream raw xcodebuild output to stderr.") var verbose = false
+
+    func run() throws {
+        let ctx = try Context.current()
+        track(ctx)
+        let check: Bisect.Check
+        switch (flow, snap, test) {
+        case (let f?, let s?, nil): check = .snap(flow: f, snap: s)
+        case (let f?, nil, nil): check = .flow(f)
+        case (nil, nil, let t?): check = .test(t)
+        default: throw ValidationError("give --flow, --flow with --snap, or --test")
+        }
+        var o = Bisect.Options(check: check)
+        o.good = good; o.bad = bad; o.verbose = verbose
+        let report = try Bisect.run(ctx, o)
+        try finish(report, g, failed: report.culprit == nil)
+    }
+}
+
 extension PR {
 
     struct Comments: ParsableCommand {

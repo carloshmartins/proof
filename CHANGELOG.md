@@ -48,6 +48,9 @@ and the layout of `~/.proof`.
 - `proof flow run <flow> --devices "iPhone SE (3rd generation),iPad Air 13-inch (M3)"` replays the flow on more
   simulators, installing the app this checkout built on each; snaps are named `<name>@<device>` and compare
   with the same device on another branch.
+- `proof bisect` finds the commit that broke a flow (`--flow`), changed a screen (`--flow … --snap …`) or made
+  a test fail (`--test`), with a binary search between `--good` (default: where the branch left its base)
+  and `--bad` (default `HEAD`) in the stack worktree. Commits that don't build are skipped.
 - Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
   first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.

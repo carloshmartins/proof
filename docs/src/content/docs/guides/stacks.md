@@ -34,6 +34,30 @@ STACK 3 branches · failures
 
 - `← introduced here` marks the branch where a failure first appears. Fix it there.
 - `+N warnings` marks a branch that adds warnings compared with the branch below it, with the first few.
+
+## Find the commit
+
+Within a branch, `proof bisect` finds the commit where something went wrong:
+
+```sh
+proof bisect --flow onboarding                 # first commit where the flow fails
+proof bisect --flow home --snap home           # first commit where the home screen changed
+proof bisect --test TimerTests/testPresets     # first commit where the test fails
+proof bisect --flow home --good v1.4 --bad main
+```
+
+```
+BISECT screen home changes first in 4f73a99 Rename the label · 4 commits checked
+  66bb925 good  Add presets
+  82e6904 bad   Tidy the timer view
+  31ff113 good  Store presets
+  4f73a99 bad   Rename the label
+```
+
+It's a binary search between `--good` (default: where the branch left its base) and `--bad` (default:
+`HEAD`), each commit built and checked in the stack worktree, so your checkout and git's own bisect are
+untouched. With `--snap`, a commit is bad when that snap's accessibility tree differs from the good
+commit's. Commits that don't build are skipped; if that leaves more than one candidate, proof lists them.
 - `(from <branch>)` marks the same failure inherited by the branches above.
 
 ```sh
