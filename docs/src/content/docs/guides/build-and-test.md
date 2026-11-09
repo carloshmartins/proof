@@ -36,6 +36,27 @@ building Tempo on iPhone 16 (log: ~/.proof/sessions/Tempo/main/logs/build-202611
 The raw log is written as the build runs, so `tail -f` on it shows everything. stdout (and `--json`) is unchanged. Set
 `PROOF_NO_PROGRESS=1` to turn it off.
 
+## New warnings
+
+A project with 300 warnings hides the 2 your change adds. `proof build` and `proof test` count the warnings
+this branch adds compared with the branch the PR targets, and list only those:
+
+```
+BUILD SUCCEEDED · 14 warnings · 2 new vs main · 41.0s
+new    Modules/Timer/Sources/TimerModel.swift:88:9  variable 'elapsed' was never mutated; consider changing to 'let' constant
+new    Modules/Timer/Sources/TimerView.swift:12:5  'onChange(of:perform:)' was deprecated in iOS 17.0
+```
+
+- It needs the other branch's warnings: build it once (`proof build` there, or `proof test --stack`, which
+  builds every branch). Until then nothing is compared.
+- Warnings match by file and message, so code that moved isn't new.
+- xcodebuild only reports warnings for files it recompiles, so proof keeps each branch's list up to date
+  across incremental builds.
+- `--compare <branch>` compares with another branch; `--compare none` turns it off.
+
+`proof test --stack` does the same per PR, against the PR below it: `+2 warnings` on the branch that added
+them.
+
 ## Test
 
 ```sh

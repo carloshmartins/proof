@@ -22,6 +22,7 @@ A non-zero exit means failure. Nothing is written to the repo; state lives in `~
 ```sh
 proof build                      # BUILD SUCCEEDED/FAILED, deduplicated errors with file:line
 proof build --warnings           # also list warnings
+                                 # "2 new vs main" + `new` lines: warnings this branch adds. Fix those.
 proof test                       # current branch, configured test plan
 proof test --only AppTests/LoginTests/testInvalidPassword
 proof test --stack               # every branch of the stack, bottom to top

@@ -174,6 +174,8 @@ struct Build: ParsableCommand {
     @OptionGroup var g: Global
     @Flag(help: "List warnings, not just the count.") var warnings = false
     @Flag(help: "Stream raw xcodebuild output to stderr.") var verbose = false
+    @Option(help: "Count new warnings against this branch, or \"base\" for the branch this PR targets. \"none\" turns it off.")
+    var compare = BaseBranch.keyword
     @Argument(parsing: .postTerminator, help: "Extra xcodebuild arguments after --.") var extra: [String] = []
 
     func run() throws {
@@ -181,10 +183,22 @@ struct Build: ParsableCommand {
         track(ctx)
         var o = BuildOptions()
         o.action = "build"; o.keepWarnings = warnings; o.verbose = verbose; o.extra = extra
+        o.compareWarnings = warningsBase(compare, ctx)
         let (result, _) = try XcodeBuild.run(ctx, o)
         try Session.saveResult(result, ctx: ctx)
         try finish(result, g, failed: !result.succeeded)
     }
+}
+
+/// The branch to count new warnings against: nil for "none", for this branch, or when no other branch of
+/// the repo has saved warnings yet (then `base` isn't resolved, which would ask GitHub).
+func warningsBase(_ value: String, _ ctx: Context) -> String? {
+    guard value != "none" else { return nil }
+    let sessions = Paths.join(Paths.home, "sessions", ctx.repo)
+    let others = ((try? FileManager.default.contentsOfDirectory(atPath: sessions)) ?? []).filter { $0 != Paths.sanitize(ctx.branch) }
+    guard others.contains(where: { Warnings.load(sessionDir: Paths.join(sessions, $0)) != nil }) else { return nil }
+    guard let base = BaseBranch.resolve(value, ctx: ctx), base != ctx.branch else { return nil }
+    return base
 }
 
 struct Brief: ParsableCommand {
@@ -209,6 +223,8 @@ struct Test: ParsableCommand {
     @Option(help: "Explicit stack branches, bottom to top, comma separated.") var branches: String?
     @Option(help: "Start the stack run at this branch.") var from: String?
     @Flag(help: "Stop the stack run at the first failing branch.") var stopOnFail = false
+    @Option(help: "Count new warnings against this branch, or \"base\" for the branch this PR targets. \"none\" turns it off. With --stack, each branch is compared with the one below it.")
+    var compare = BaseBranch.keyword
     @Flag(help: "Stream raw xcodebuild output to stderr.") var verbose = false
 
     func run() throws {
@@ -223,6 +239,7 @@ struct Test: ParsableCommand {
         } else {
             var o = BuildOptions()
             o.action = "test"; o.onlyTesting = only; o.skipTesting = skip; o.verbose = verbose
+            o.compareWarnings = warningsBase(compare, ctx)
             let (result, _) = try XcodeBuild.run(ctx, o)
             try Session.saveResult(result, ctx: ctx)
             try finish(result, g, failed: !result.succeeded)

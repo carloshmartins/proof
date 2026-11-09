@@ -32,6 +32,8 @@ public struct BriefResult: Codable, Report {
     public var tests: TestSummary? = nil
     public var duration: Double? = nil
     public var tail: [String]? = nil          // raw tail when failed with nothing recognised
+    public var newWarnings: [Diagnostic]? = nil   // warnings this branch adds compared with `warningsBase`
+    public var warningsBase: String? = nil
 
     public var succeeded: Bool { status == "succeeded" }
 
@@ -42,11 +44,18 @@ public struct BriefResult: Codable, Report {
         var head = "\(action.uppercased()) \(status.uppercased())"
         if !errors.isEmpty { head += " · \(errors.count) error\(errors.count == 1 ? "" : "s")" }
         if warningCount > 0 { head += " · \(warningCount) warning\(warningCount == 1 ? "" : "s")" }
+        if let added = newWarnings, let base = warningsBase {
+            head += added.isEmpty ? " · no new warnings vs \(base)" : " · \(added.count) new vs \(base)"
+        }
         if let d = duration { head += String(format: " · %.1fs", d) }
         out.append(head)
 
         for e in errors.prefix(maxItems) { out.append("error  \(Self.location(e.file, e.line, e.column))\(e.message)") }
         if errors.count > maxItems { out.append("… +\(errors.count - maxItems) more errors") }
+        if warnings == nil, let added = newWarnings {
+            for w in added.prefix(maxItems) { out.append("new    \(Self.location(w.file, w.line, w.column))\(w.message)") }
+            if added.count > maxItems { out.append("… +\(added.count - maxItems) more new warnings") }
+        }
         if let warnings {
             for w in warnings.prefix(maxItems) { out.append("warn   \(Self.location(w.file, w.line, w.column))\(w.message)") }
             if warnings.count > maxItems { out.append("… +\(warnings.count - maxItems) more warnings") }
