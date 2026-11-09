@@ -28,13 +28,15 @@ public enum ProofError: Error, CustomStringConvertible {
 public enum Shell {
     /// Runs a command through /usr/bin/env so PATH lookup works. Captures stdout and stderr.
     /// Pipes are drained concurrently, so large outputs (xcodebuild) never deadlock.
+    /// `onOutput` gets every chunk as it arrives, for logs and progress.
     @discardableResult
     public static func run(
         _ args: [String],
         cwd: String? = nil,
         env: [String: String] = [:],
         stdin: String? = nil,
-        tee: FileHandle? = nil
+        tee: FileHandle? = nil,
+        onOutput: ((Data) -> Void)? = nil
     ) throws -> ShellResult {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
@@ -64,8 +66,9 @@ public enum Shell {
                 group.leave()
             }
         }
-        drain(outPipe.fileHandleForReading) { d in lock.lock(); outData.append(d); lock.unlock(); tee?.write(d) }
-        drain(errPipe.fileHandleForReading) { d in lock.lock(); errData.append(d); lock.unlock(); tee?.write(d) }
+        // Under the lock so tee and onOutput see stdout and stderr chunks one at a time.
+        drain(outPipe.fileHandleForReading) { d in lock.lock(); outData.append(d); tee?.write(d); onOutput?(d); lock.unlock() }
+        drain(errPipe.fileHandleForReading) { d in lock.lock(); errData.append(d); tee?.write(d); onOutput?(d); lock.unlock() }
 
         try process.run()
         let pid = process.processIdentifier

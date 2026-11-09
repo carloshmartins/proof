@@ -33,7 +33,16 @@ esac
 GH
 chmod +x "$work/stub/gh"
 
-export TEMPO_HOME="$work/home" TEMPO_REPO="$work/Tempo" TEMPO_PATH="$work/stub:$work/prefix/bin"
+# The tapes' `proof`: runs in a pseudo-terminal, so proof shows its live progress line as in a real terminal,
+# and rewrites the temporary paths to ~/.proof and ~. Split on \r too, so each progress redraw passes at once.
+cat > "$work/rc.sh" <<'RC'
+proof() {
+  script -q /dev/null proof "$@" | perl -e '$| = 1; $/ = "\r";
+    while (<STDIN>) { s#\Q$ENV{TEMPO_HOME}\E#~/.proof#g; s#\Q$ENV{HOME}\E#~#g; print }'
+}
+RC
+
+export TEMPO_HOME="$work/home" TEMPO_REPO="$work/Tempo" TEMPO_PATH="$work/stub:$work/prefix/bin" TEMPO_RC="$work/rc.sh"
 export PROOF_HOME="$TEMPO_HOME" PATH="$TEMPO_PATH:$PATH" PROOF_PORT=22187   # never clash with your own runner
 
 step "create the demo repository"
@@ -66,7 +75,12 @@ proof run >/dev/null 2>&1 || { sleep 3; proof ui launch >/dev/null; }
 proof ui launch >/dev/null
 
 step "record the terminal"
+# A build from scratch, worth watching: drop the demo checkout's own DerivedData folder.
+dd=$(cd "$TEMPO_REPO" && xcodebuild -showBuildSettings -scheme Tempo -destination "platform=iOS Simulator,id=$udid" 2>/dev/null \
+  | sed -n 's#^ *OBJROOT = \(.*/DerivedData/Tempo-[a-z]*\)/Build/Intermediates.noindex$#\1#p' | head -1)
+if [ -n "$dd" ]; then rm -rf "$dd"; fi
 cd "$here"
+vhs tapes/build.tape >/dev/null
 vhs tapes/stack.tape >/dev/null
 (cd "$TEMPO_REPO" && proof ui launch >/dev/null)      # fresh app state for the snap tape
 vhs tapes/snap.tape >/dev/null
@@ -88,6 +102,7 @@ to_gif() {   # in out [fast_from fast_tail factor]
   rm -f "$in"
 }
 to_gif stack.mp4 "$out/stack.gif" 2.8 6 8
+to_gif build.mp4 "$out/build.gif"
 to_gif snap.mp4 "$out/snap.gif"
 
 step "render the report"

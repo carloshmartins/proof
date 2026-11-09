@@ -77,6 +77,10 @@ error  Modules/Login/Sources/LoginView.swift:42:17  cannot find 'viewModel' in s
 error  Modules/Settings/Sources/SettingsStore.swift:88:5  missing return in instance method expected to return 'Bool'
 ```
 
+While it builds, one line says what xcodebuild is doing, so a long build never looks stuck:
+
+![proof build showing a live progress line with elapsed time and the file being compiled, then BUILD SUCCEEDED](assets/build.gif)
+
 **Look at the screen, prove the change, act on it.** The accessibility tree as text an agent can read; a
 snap compared with the branch this PR targets; then a tap and a check, by identifier, never by guessing
 coordinates:

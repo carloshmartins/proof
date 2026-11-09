@@ -11,6 +11,12 @@ and the layout of `~/.proof`.
 - Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
   first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.
+- Progress while xcodebuild runs: `proof build`, `test`, `run`, stack runs and the runner build print what
+  they are doing on stderr (a live line with elapsed time, the file being compiled and test counts in a
+  terminal; otherwise one line that grows by a dot every 15 seconds and ends with the elapsed time, cheap
+  for an agent to read), so a long build no longer looks stuck. The raw log is written as the build runs;
+  outside a terminal its path is printed, for `tail -f`. `PROOF_NO_PROGRESS=1`
+  turns it off.
 
 ### Fixed
 - Starting the simulator runner is reliable: each start gets a session the runner echoes on `/health`, so a
