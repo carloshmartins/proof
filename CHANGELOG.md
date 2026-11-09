@@ -30,6 +30,9 @@ and the layout of `~/.proof`.
 - `proof ax audit` runs Xcode's accessibility audit (`performAccessibilityAudit`, iOS 17+ simulators) on the
   current screen: contrast, hit regions, descriptions, Dynamic Type, clipped text and traits, next to the
   controls without identifiers. `--only <types>` filters, `--strict` exits 1 when anything is found.
+- `proof review <PR>` reviews someone else's pull request: it fetches the PR (forks too), builds it in the
+  stack worktree, replays the repo's flows on the base (when its snaps are missing) and on the PR, and writes
+  the report with every screen before and after to the session `pr-<number>`. `--flow`, `--test`, `--open`.
 - Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
   first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.

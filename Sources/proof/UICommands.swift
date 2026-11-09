@@ -410,6 +410,37 @@ struct AX: ParsableCommand {
 
 struct PR: ParsableCommand {
     static let configuration = CommandConfiguration(abstract: "GitHub PR helpers.", subcommands: [Comments.self])
+}
+
+struct ReviewCommand: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "review",
+        abstract: "Review someone else's PR: build it, replay your flows on its base and on it, open the before and after.",
+        discussion: """
+        Works in the stack worktree, so your checkout is untouched. The base is replayed only for flows whose
+        snaps it doesn't have yet. Results go to the session pr-<number>; the simulator ends with the PR's app.
+        """)
+    @OptionGroup var g: Global
+    @Argument(help: "PR number.") var number: Int
+    @Option(name: .customLong("flow"), help: "Replay only this flow. Repeatable. Default: every flow of the repo.") var flows: [String] = []
+    @Flag(help: "Also run the tests.") var test = false
+    @Flag(help: "Replay the flows on the base again even if its snaps exist.") var freshBaseline = false
+    @Flag(help: "Open the report in the browser.") var open = false
+    @Flag(help: "Stream raw xcodebuild output to stderr.") var verbose = false
+
+    func run() throws {
+        let ctx = try Context.current()
+        track(ctx)
+        var o = Review.Options()
+        o.flows = flows.isEmpty ? nil : flows
+        o.test = test; o.freshBaseline = freshBaseline; o.verbose = verbose
+        let report = try Review.run(ctx, number: number, options: o)
+        if open, let packet = report.packet { _ = try? Shell.run(["open", packet]) }
+        try finish(report, g, failed: !report.ok)
+    }
+}
+
+extension PR {
 
     struct Comments: ParsableCommand {
         static let configuration = CommandConfiguration(abstract: "Unresolved review threads, reviews and comments, condensed for agents.")

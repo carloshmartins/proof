@@ -142,6 +142,16 @@ proof pr comments --no-bots --full
 
 Address every unresolved thread. Use the `path:line` to find the code.
 
+## Reviewing someone else's PR
+
+```sh
+proof review 42 --json           # build PR #42 in the worktree, replay flows on its base and on it
+proof review 42 --test --open    # with tests; open the before/after report
+```
+
+Report what changed on screen (`screens changed vs <base>`), new warnings, failing steps. Your checkout is
+untouched; afterwards `proof run` puts the current branch's app back on the simulator.
+
 ## Setup (only when asked)
 
 ```sh

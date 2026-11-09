@@ -24,7 +24,7 @@ struct Proof: ParsableCommand {
         version: "0.2.0",
         subcommands: [
             Init.self, Setup.self, Doctor.self, Build.self, Brief.self, Test.self, Run.self, Stop.self,
-            UI.self, Snap.self, Record.self, FlowCommand.self, VideoCommand.self, AX.self, PR.self, PacketCommand.self,
+            UI.self, Snap.self, Record.self, FlowCommand.self, VideoCommand.self, AX.self, PR.self, ReviewCommand.self, PacketCommand.self,
         ]
     )
 }

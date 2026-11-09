@@ -34,6 +34,7 @@ export default defineConfig({
 						{ label: 'Flows', slug: 'guides/flows' },
 						{ label: 'The report', slug: 'guides/report' },
 						{ label: 'Accessibility identifiers', slug: 'guides/accessibility' },
+						{ label: 'Review a pull request', slug: 'guides/review' },
 						{ label: 'PR review comments', slug: 'guides/pr-comments' },
 					],
 				},
