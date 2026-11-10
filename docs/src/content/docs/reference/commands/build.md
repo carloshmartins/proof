@@ -10,11 +10,12 @@ sidebar:
 Build the scheme for the simulator and print a condensed result.
 
 ```sh
-proof build [--json] [--warnings] [--verbose] [--compare <compare>] [<extra> ...]
+proof build [--json] [--max-lines <max-lines>] [--warnings] [--verbose] [--compare <compare>] [<extra> ...]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--warnings` | List warnings, not just the count. |
 | `--verbose` | Stream raw xcodebuild output to stderr. |
 | `--compare <compare>` | Count new warnings against this branch, or "base" for the branch this PR targets. "none" turns it off. Default: `base`. |

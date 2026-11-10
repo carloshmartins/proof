@@ -7,6 +7,8 @@ description: Build, test and verify iOS app changes with the `proof` CLI. Use fo
 
 `proof` condenses Xcode output and lets you prove a change works on the simulator.
 Every command prints compact text. Add `--json` when you need to parse the result.
+Output too long for your context? `--max-lines 60` (or `PROOF_MAX_LINES=60`) keeps the head and saves the rest
+to `~/.proof/last-output.txt`; `proof ui tree --depth 4` trims deep screens.
 A non-zero exit means failure. Nothing is written to the repo; state lives in `~/.proof`.
 
 ## Rules
@@ -27,6 +29,8 @@ proof test                       # current branch, configured test plan
 proof test --only AppTests/LoginTests/testInvalidPassword
 proof test --stack               # every branch of the stack, bottom to top
 proof test --stack --stop-on-fail
+proof test --retry 3             # retry failing tests: FLAKY (passed on a retry) vs FAIL (failed every time)
+proof test --coverage            # which changed lines no test runs ("untested file: 18-24"): write tests for those
 xcodebuild … 2>&1 | proof brief  # condense output you already have
 proof stop                       # end the newest running build/test/run/flow cleanly (like Ctrl-C); --all for every one
 ```
@@ -104,6 +108,12 @@ Use `expect` after each navigation so the flow fails where the problem is, not t
 proof snap login                 # screenshot + tree for this branch
 proof snap login --compare base  # plus a tree diff against the "login" snap of the branch this PR targets
 proof snap login --compare develop  # or name any branch
+proof snap login --variants dark,ax5,dark+ax3  # also in dark mode / large text: login@dark, login@ax5, …
+proof flow run login --variants ar,rtl         # replay per locale / right-to-left (needs a relaunch)
+proof repro 123                                # replay the flow in issue #123: REPRODUCED (exit 1) or NOT REPRODUCED
+proof flow export login --markdown             # a flow to paste into a bug report
+proof bisect --flow login --snap login         # which commit changed the login screen (also --test <id>)
+proof flow run login --devices "iPhone SE (3rd generation),iPad Air 13-inch (M3)"   # small phone, tablet
                                  # snaps/<name>.json keeps the nodes with frames (--json: "nodes")
 proof packet                     # writes report.md/report.html for this branch
 proof packet --open              # open the HTML report (screens side by side)
@@ -123,6 +133,7 @@ is untouched), reinstalls your branch, and diffs every snap. `--fresh-baseline` 
 proof ax scan                    # static: SwiftUI, UIKit, xib/storyboard controls without identifiers
 proof ax scan Modules/Login --control PrimaryButton   # include custom controls
 proof ui tree --missing-ids      # runtime: current screen
+proof ax audit                   # Xcode's audit of the current screen: contrast, hit area, Dynamic Type, …
 ```
 
 When adding identifiers, use the pattern `<feature>.<element>` (for example `login.submit`).
@@ -137,6 +148,16 @@ proof pr comments --no-bots --full
 ```
 
 Address every unresolved thread. Use the `path:line` to find the code.
+
+## Reviewing someone else's PR
+
+```sh
+proof review 42 --json           # build PR #42 in the worktree, replay flows on its base and on it
+proof review 42 --test --open    # with tests; open the before/after report
+```
+
+Report what changed on screen (`screens changed vs <base>`), new warnings, failing steps. Your checkout is
+untouched; afterwards `proof run` puts the current branch's app back on the simulator.
 
 ## Setup (only when asked)
 

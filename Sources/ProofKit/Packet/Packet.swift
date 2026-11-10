@@ -79,6 +79,10 @@ public enum Packet {
                         md.append(diff.isEmpty ? "No accessibility tree changes vs `\(other)`." : "Tree diff vs `\(other)`:")
                         if !diff.isEmpty { md.append("```diff"); md.append(contentsOf: diff); md.append("```") }
                     }
+                    if let pixels = s.pixels {
+                        md.append(pixels.image != nil ? "\(pixels.text.components(separatedBy: " → ").first!): ![changes](snaps/\(Paths.sanitize(s.name)).diff.png)"
+                                                      : pixels.text)
+                    }
                 }
                 if let tree = try? String(contentsOfFile: s.tree, encoding: .utf8) {
                     md.append("<details><summary>accessibility tree</summary>\n\n```\n\(tree)\n```\n</details>")
@@ -118,6 +122,9 @@ public enum Packet {
     static func htmlScreen(_ s: SnapRecord, before: String?) -> String {
         let after = "<figure><img src=\"file://\(s.screenshot)\"><figcaption>\(esc(s.branch)) · \(esc(s.sha))</figcaption></figure>"
         let beforeFig = before.map { "<figure><img src=\"file://\($0)\"><figcaption>\(esc(s.compareBranch ?? ""))</figcaption></figure>" } ?? ""
+        let pixelFig = s.pixels.flatMap { p in p.image.map {
+            "<figure><img src=\"file://\($0)\"><figcaption>\(esc(String(format: "%.1f%% of pixels changed", p.changedPercent)))</figcaption></figure>"
+        } } ?? ""
         var diff = ""
         if let d = s.diff, !d.isEmpty {
             diff = "<pre class=diff>" + d.map { line in
@@ -125,7 +132,7 @@ public enum Packet {
                 return "<span class=\"\(cls)\">\(esc(line))</span>"
             }.joined(separator: "\n") + "</pre>"
         }
-        return "<section><h3>\(esc(s.name))</h3><div class=pair>\(beforeFig)\(after)</div>\(diff)</section>"
+        return "<section><h3>\(esc(s.name))</h3><div class=pair>\(beforeFig)\(after)\(pixelFig)</div>\(diff)</section>"
     }
 
     static func htmlPage(title: String, markdown: String, screens: [String]) -> String {

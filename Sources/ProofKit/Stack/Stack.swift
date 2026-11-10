@@ -67,7 +67,10 @@ public struct StackReport: Report, Decodable {
         for run in branches {
             let r = run.result
             var line = (r.succeeded ? "✓ " : "✗ ") + "\(run.branch) (\(run.sha))"
-            if let t = r.tests { line += "  \(t.passed) passed, \(t.failed) failed" }
+            if let t = r.tests {
+                line += "  \(t.passed) passed, \(t.failed) failed"
+                if let flaky = t.flaky, !flaky.isEmpty { line += ", \(flaky.count) flaky" }
+            }
             if !r.errors.isEmpty { line += "  \(r.errors.count) build error\(r.errors.count == 1 ? "" : "s")" }
             if let added = r.newWarnings, !added.isEmpty { line += "  +\(added.count) warning\(added.count == 1 ? "" : "s")" }
             out.append(line)
@@ -102,6 +105,7 @@ public struct StackOptions {
     public var from: String? = nil
     public var stopOnFail = false
     public var onlyTesting: [String] = []
+    public var retry: Int? = nil
     public var verbose = false
     public init() {}
 }
@@ -153,6 +157,7 @@ public enum StackRunner {
             b.root = wt
             b.derivedData = Paths.worktreeDerivedData(repo: ctx.repo)
             b.onlyTesting = opts.onlyTesting
+            b.retry = opts.retry
             b.verbose = opts.verbose
             // New warnings are counted against the branch below, like failures.
             let position = planned.branches.firstIndex(of: branch) ?? 0

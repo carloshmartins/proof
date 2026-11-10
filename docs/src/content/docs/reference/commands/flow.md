@@ -25,18 +25,19 @@ expect --id home.title --timeout 15
 snap home
 ```
 
-**Subcommands:** [`run`](#proof-flow-run) · [`list`](#proof-flow-list) · [`show`](#proof-flow-show) · [`check`](#proof-flow-check)
+**Subcommands:** [`run`](#proof-flow-run) · [`list`](#proof-flow-list) · [`show`](#proof-flow-show) · [`check`](#proof-flow-check) · [`export`](#proof-flow-export)
 
 ## proof flow run
 
 Replay a flow on this branch, or on every branch of the stack with --stack.
 
 ```sh
-proof flow run [--json] <flow> [--var <var> ...] [--continue] [--compare <compare>] [--video] [--relaunch] [--stack] [--branches <branches>] [--from <from>] [--stop-on-fail] [--verbose] [--fresh-baseline] [--no-baseline]
+proof flow run [--json] [--max-lines <max-lines>] <flow> [--var <var> ...] [--continue] [--compare <compare>] [--video] [--relaunch] [--stack] [--branches <branches>] [--from <from>] [--stop-on-fail] [--verbose] [--fresh-baseline] [--no-baseline] [--variants <variants>] [--devices <devices>]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<flow>` | Flow name or path to a .flow file. **Required.** |
 | `--var <var>` | NAME=value for ${NAME}. Repeatable. Repeatable. |
 | `--continue` | Keep going after a failed step. |
@@ -50,6 +51,8 @@ proof flow run [--json] <flow> [--var <var> ...] [--continue] [--compare <compar
 | `--verbose` | Stream raw xcodebuild output to stderr (stack builds). |
 | `--fresh-baseline` | With --compare: replay the flow on the compared branch first even if its snaps exist. |
 | `--no-baseline` | With --compare: never replay the flow on the compared branch; compare with the snaps it has. |
+| `--variants <variants>` | Replay the flow again per variant, e.g. dark,ax5,ar,rtl (join with + to combine). Snaps are named <name>@<variant>. |
+| `--devices <devices>` | Replay the flow again on these simulators, comma separated, e.g. "iPhone SE (3rd generation),iPad Air 13-inch (M3)". Snaps are named <name>@<device>. |
 
 **JSON output** (`--json`):
 
@@ -59,8 +62,12 @@ proof flow run [--json] <flow> [--var <var> ...] [--continue] [--compare <compar
 ## proof flow list
 
 ```sh
-proof flow list [--json]
+proof flow list [--json] [--max-lines <max-lines>]
 ```
+
+| Argument | Description |
+|---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 
 **JSON output** (`--json`):
 
@@ -71,11 +78,12 @@ proof flow list [--json]
 Print a flow with includes expanded.
 
 ```sh
-proof flow show [--json] <flow>
+proof flow show [--json] [--max-lines <max-lines>] <flow>
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<flow>` | **Required.** |
 
 **JSON output** (`--json`):
@@ -87,13 +95,35 @@ proof flow show [--json] <flow>
 Validate a flow without running it (syntax, includes, variables).
 
 ```sh
-proof flow check [--json] <flow> [--var <var> ...]
+proof flow check [--json] [--max-lines <max-lines>] <flow> [--var <var> ...]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<flow>` | **Required.** |
 | `--var <var>` | NAME=value. Repeatable. Repeatable. |
+
+**JSON output** (`--json`):
+
+- [`MessageReport`](../../json-output/#messagereport)
+
+## proof flow export
+
+Print a flow as one self-contained file to attach to a bug report.
+
+```sh
+proof flow export [--json] [--max-lines <max-lines>] <flow> [--markdown] [--out <out>]
+```
+
+Includes are expanded and a header says where it was recorded. Paste it into an issue with --markdown; `proof repro <issue>` replays it.
+
+| Argument | Description |
+|---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
+| `<flow>` | **Required.** |
+| `--markdown` | Wrap it in a ```flow block, ready to paste into an issue. |
+| `--out <out>` | Write to this file instead of printing it. |
 
 **JSON output** (`--json`):
 

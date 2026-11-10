@@ -23,8 +23,12 @@ proof record stop login                saves ~/.proof/flows/<repo>/login.flow
 ## proof record start
 
 ```sh
-proof record start [--json]
+proof record start [--json] [--max-lines <max-lines>]
 ```
+
+| Argument | Description |
+|---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 
 **JSON output** (`--json`):
 
@@ -35,11 +39,12 @@ proof record start [--json]
 Stop and save the recording as a flow.
 
 ```sh
-proof record stop [--json] <name> [--force]
+proof record stop [--json] [--max-lines <max-lines>] <name> [--force]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<name>` | Flow name. **Required.** |
 | `--force` | Overwrite an existing flow. |
 
@@ -50,8 +55,12 @@ proof record stop [--json] <name> [--force]
 ## proof record status
 
 ```sh
-proof record status [--json]
+proof record status [--json] [--max-lines <max-lines>]
 ```
+
+| Argument | Description |
+|---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 
 **JSON output** (`--json`):
 
@@ -62,11 +71,12 @@ proof record status [--json]
 Drop the last recorded step(s).
 
 ```sh
-proof record undo [--json] [<count>]
+proof record undo [--json] [--max-lines <max-lines>] [<count>]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<count>` | Default: `1`. |
 
 **JSON output** (`--json`):
@@ -76,8 +86,12 @@ proof record undo [--json] [<count>]
 ## proof record discard
 
 ```sh
-proof record discard [--json]
+proof record discard [--json] [--max-lines <max-lines>]
 ```
+
+| Argument | Description |
+|---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 
 **JSON output** (`--json`):
 

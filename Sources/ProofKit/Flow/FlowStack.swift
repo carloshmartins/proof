@@ -59,9 +59,10 @@ public enum FlowStack {
 
     /// Checks `branch` out in the stack worktree, runs the repo's prepare command, builds it with the
     /// worktree's own DerivedData, and installs the app on the simulator when the build succeeds.
-    public static func checkoutAndInstall(_ ctx: Context, branch: String, worktree wt: String, derivedData derived: String,
-                                          simulator udid: String, verbose: Bool) throws -> PreparedBranch {
-        let ref = try StackRunner.resolveRef(branch, cwd: wt)
+    /// `ref` checks out a commit instead of `branch` (a PR from a fork); `branch` still names the session.
+    public static func checkoutAndInstall(_ ctx: Context, branch: String, ref explicitRef: String? = nil, worktree wt: String,
+                                          derivedData derived: String, simulator udid: String, verbose: Bool) throws -> PreparedBranch {
+        let ref = try explicitRef ?? StackRunner.resolveRef(branch, cwd: wt)
         try Shell.checked(["git", "checkout", "--detach", "--force", ref], cwd: wt)
         if Paths.exists(Paths.join(wt, ".gitmodules")) {
             try Shell.checked(["git", "submodule", "update", "--init", "--recursive"], cwd: wt)

@@ -132,6 +132,7 @@ struct UI: ParsableCommand {
         @Flag(help: "Include element frames.") var frames = false
         @Flag(name: .shortAndLong, help: "Only interactive elements, flat.") var interactive = false
         @Flag(help: "Only interactive elements missing an accessibility identifier.") var missingIds = false
+        @Option(help: "Only elements this many levels deep or less (0 is the top).") var depth: Int?
 
         struct TreeReport: Report {
             let nodes: [UINode]
@@ -144,6 +145,7 @@ struct UI: ParsableCommand {
         func run() throws {
             let response = try runnerCommand("/tree", [:])
             var nodes = try UITree.decode(response)
+            if let depth { nodes = UITree.limit(nodes, depth: depth) }
             let screen = UITree.screen(response).map { ScreenSize(width: $0[0], height: $0[1]) }
             if missingIds { nodes = UITree.missingIdentifiers(nodes) }
             let rendered = missingIds
@@ -380,12 +382,28 @@ struct AX: ParsableCommand {
     }
 
     struct Audit: ParsableCommand {
-        static let configuration = CommandConfiguration(abstract: "Runtime audit of the current screen via the runner.")
+        static let configuration = CommandConfiguration(
+            abstract: "Audit the current screen: Xcode's accessibility audit plus controls without identifiers.",
+            discussion: """
+            Xcode's audit (iOS 17+ simulators) checks contrast, hit regions, descriptions, Dynamic Type,
+            clipped text and traits. Run it on each screen you change, and in --variants looks too.
+            """)
         @OptionGroup var g: Global
+        @Option(help: "Only these issue types, comma separated: contrast, hit-region, description, dynamic-type, text-clipped, trait, element-detection.")
+        var only: String?
+        @Flag(help: "Exit non-zero when anything is found.") var strict = false
         func run() throws {
-            let nodes = UITree.missingIdentifiers(try UITree.decode(try runnerCommand("/tree", [:])))
-            let text = nodes.isEmpty ? "AX AUDIT clean" : "AX AUDIT \(nodes.count) without identifier\n" + UITree.render(nodes, interactiveOnly: true)
-            try finish(MessageReport(ok: nodes.isEmpty, text), g)
+            let ctx = try Context.current()
+            let missing = UITree.missingIdentifiers(try UITree.decode(try runnerCommand("/tree", [:])))
+            var (supported, issues) = AXAuditReport.decodeIssues(try runnerCommand("/audit", [:]))
+            if let only {
+                let types = Set(only.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) })
+                issues = issues.filter { types.contains($0.type) }
+            }
+            let report = AXAuditReport(supported: supported, issues: issues, missingIdentifiers: missing)
+            try Paths.ensureDir(Paths.join(ctx.sessionDir, "results"))
+            try Output.writeJSON(report, to: Paths.join(ctx.sessionDir, "results", "ax-audit.json"))
+            try finish(report, g, failed: strict && !report.clean)
         }
     }
 }
@@ -394,6 +412,121 @@ struct AX: ParsableCommand {
 
 struct PR: ParsableCommand {
     static let configuration = CommandConfiguration(abstract: "GitHub PR helpers.", subcommands: [Comments.self])
+}
+
+struct ReviewCommand: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "review",
+        abstract: "Review someone else's PR: build it, replay your flows on its base and on it, open the before and after.",
+        discussion: """
+        Works in the stack worktree, so your checkout is untouched. The base is replayed only for flows whose
+        snaps it doesn't have yet. Results go to the session pr-<number>; the simulator ends with the PR's app.
+        """)
+    @OptionGroup var g: Global
+    @Argument(help: "PR number.") var number: Int
+    @Option(name: .customLong("flow"), help: "Replay only this flow. Repeatable. Default: every flow of the repo.") var flows: [String] = []
+    @Flag(help: "Also run the tests.") var test = false
+    @Flag(help: "Replay the flows on the base again even if its snaps exist.") var freshBaseline = false
+    @Flag(help: "Open the report in the browser.") var open = false
+    @Flag(help: "Stream raw xcodebuild output to stderr.") var verbose = false
+
+    func run() throws {
+        let ctx = try Context.current()
+        track(ctx)
+        var o = Review.Options()
+        o.flows = flows.isEmpty ? nil : flows
+        o.test = test; o.freshBaseline = freshBaseline; o.verbose = verbose
+        let report = try Review.run(ctx, number: number, options: o)
+        if open, let packet = report.packet { _ = try? Shell.run(["open", packet]) }
+        try finish(report, g, failed: !report.ok)
+    }
+}
+
+struct BisectCommand: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "bisect",
+        abstract: "Find the commit that broke a flow, changed a screen or made a test fail.",
+        discussion: """
+        A binary search between --good (default: where this branch left its base) and --bad (default: HEAD).
+        Each commit is built in the stack worktree; your checkout and git's own bisect are untouched.
+        Commits that don't build are skipped.
+          proof bisect --flow onboarding                  first commit where the flow fails
+          proof bisect --flow home --snap home            first commit where the home screen's tree changed
+          proof bisect --test TimerTests/testPresets      first commit where the test fails
+        """)
+    @OptionGroup var g: Global
+    @Option(help: "Flow to replay on each commit.") var flow: String?
+    @Option(help: "With --flow: look for the first commit where this snap's tree differs from the good commit's.") var snap: String?
+    @Option(help: "Test identifier (Target/Class/test) to run on each commit.") var test: String?
+    @Option(help: "A commit or branch where things were right.") var good: String?
+    @Option(help: "A commit or branch where they're wrong (default HEAD).") var bad: String?
+    @Flag(help: "Stream raw xcodebuild output to stderr.") var verbose = false
+
+    func run() throws {
+        let ctx = try Context.current()
+        track(ctx)
+        let check: Bisect.Check
+        switch (flow, snap, test) {
+        case (let f?, let s?, nil): check = .snap(flow: f, snap: s)
+        case (let f?, nil, nil): check = .flow(f)
+        case (nil, nil, let t?): check = .test(t)
+        default: throw ValidationError("give --flow, --flow with --snap, or --test")
+        }
+        var o = Bisect.Options(check: check)
+        o.good = good; o.bad = bad; o.verbose = verbose
+        let report = try Bisect.run(ctx, o)
+        try finish(report, g, failed: report.culprit == nil)
+    }
+}
+
+struct ReproCommand: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "repro",
+        abstract: "Replay the flow from a bug report: a GitHub issue, or a .flow file.",
+        discussion: """
+        From an issue, proof takes the first ```flow block (or the first code block made only of flow steps),
+        saves it as the flow issue-<number> and replays it from a fresh launch. Exit 1 means the bug reproduced.
+          proof repro 123
+          proof repro https://github.com/acme/app/issues/123
+          proof repro ~/Downloads/checkout-crash.flow
+        """)
+    @OptionGroup var g: Global
+    @Argument(help: "Issue number or URL, or a .flow file.") var target: String
+    @Option(name: .customLong("var"), help: "NAME=value for ${NAME}. Repeatable.") var vars: [String] = []
+
+    func run() throws {
+        let ctx = try Context.current()
+        track(ctx)
+        let flow: Flow
+        let source: String
+        let path = (target as NSString).expandingTildeInPath
+        if FileManager.default.fileExists(atPath: path) {
+            flow = try Flow.load(path, repo: ctx.repo)
+            source = (path as NSString).lastPathComponent
+        } else if let number = Repro.issueNumber(target) {
+            let body = try Shell.checked(["gh", "issue", "view", String(number), "--json", "body", "-q", ".body"], cwd: ctx.root)
+            guard let text = Repro.extractFlow(markdown: body) else {
+                throw ProofError.message("issue #\(number) has no flow. Paste one from `proof flow export <flow> --markdown`")
+            }
+            let saved = try Flow.save(name: "issue-\(number)", lines: text.components(separatedBy: "\n"), repo: ctx.repo, overwrite: true)
+            flow = try Flow.load(saved, repo: ctx.repo)
+            source = "issue #\(number)"
+        } else {
+            throw ValidationError("not a file, issue number or issue URL: \(target)")
+        }
+        var o = FlowRunOptions()
+        o.relaunch = true
+        for v in vars {
+            let p = v.split(separator: "=", maxSplits: 1).map(String.init)
+            guard p.count == 2 else { throw ValidationError("--var expects NAME=value, got \(v)") }
+            o.vars[p[0]] = p[1]
+        }
+        let report = ReproReport(source: source, flow: try FlowEngine.run(flow, ctx: ctx, options: o))
+        try finish(report, g, failed: report.reproduced)
+    }
+}
+
+extension PR {
 
     struct Comments: ParsableCommand {
         static let configuration = CommandConfiguration(abstract: "Unresolved review threads, reviews and comments, condensed for agents.")

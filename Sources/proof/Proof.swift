@@ -24,7 +24,7 @@ struct Proof: ParsableCommand {
         version: "0.2.0",
         subcommands: [
             Init.self, Setup.self, Doctor.self, Build.self, Brief.self, Test.self, Run.self, Stop.self,
-            UI.self, Snap.self, Record.self, FlowCommand.self, VideoCommand.self, AX.self, PR.self, PacketCommand.self,
+            UI.self, Snap.self, Record.self, FlowCommand.self, VideoCommand.self, AX.self, PR.self, ReviewCommand.self, BisectCommand.self, ReproCommand.self, PacketCommand.self,
         ]
     )
 }
@@ -32,11 +32,13 @@ struct Proof: ParsableCommand {
 struct Global: ParsableArguments {
     @Flag(name: .long, help: "Machine-readable JSON output for agents.")
     var json = false
+    @Option(name: .customLong("max-lines"), help: "Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES.")
+    var maxLines: Int?
 }
 
 /// Emits a report and exits non-zero when it represents a failure.
 func finish<R: Report>(_ report: R, _ g: Global, failed: Bool = false) throws {
-    Output.emit(report, json: g.json)
+    Output.emit(report, json: g.json, maxLines: Output.lineBudget(g.maxLines))
     if failed { throw ExitCode(1) }
 }
 
@@ -69,13 +71,17 @@ struct Setup: ParsableCommand {
         """)
     @OptionGroup var g: Global
     @Option(help: "Skills folder your agent reads (default ~/.claude/skills/proof).") var skillDir: String?
+    @Option(name: .customLong("agent"), help: "Install the skill for this agent: claude, codex, cursor, copilot or all. Repeatable.")
+    var agents: [String] = []
 
     func run() throws {
         guard let resources = Installer.resources(executable: Bundle.main.executablePath ?? CommandLine.arguments[0]) else {
             throw ProofError.message("runner sources and skill not found next to this binary. Run it from a proof checkout (make install)")
         }
-        let dir = skillDir.map { ($0 as NSString).expandingTildeInPath } ?? Installer.defaultSkillDir
-        try finish(try Installer.install(resources, skillDir: dir), g)
+        var dirs = try Installer.skillDirs(agents: agents)
+        if let skillDir { dirs.append((skillDir as NSString).expandingTildeInPath) }
+        if dirs.isEmpty { dirs = [Installer.defaultSkillDir] }
+        try finish(try Installer.install(resources, skillDirs: dirs), g)
     }
 }
 
@@ -223,6 +229,10 @@ struct Test: ParsableCommand {
     @Option(help: "Explicit stack branches, bottom to top, comma separated.") var branches: String?
     @Option(help: "Start the stack run at this branch.") var from: String?
     @Flag(help: "Stop the stack run at the first failing branch.") var stopOnFail = false
+    @Option(help: "Run a failing test up to N times in all. One that passes on a retry is reported as flaky, not failed.")
+    var retry: Int?
+    @Flag(help: "Report which of the lines this branch changed the tests run (against --compare, default the PR's base).")
+    var coverage = false
     @Option(help: "Count new warnings against this branch, or \"base\" for the branch this PR targets. \"none\" turns it off. With --stack, each branch is compared with the one below it.")
     var compare = BaseBranch.keyword
     @Flag(help: "Stream raw xcodebuild output to stderr.") var verbose = false
@@ -233,12 +243,13 @@ struct Test: ParsableCommand {
         if stack {
             var o = StackOptions()
             o.branches = branches?.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-            o.from = from; o.stopOnFail = stopOnFail; o.onlyTesting = only; o.verbose = verbose
+            o.from = from; o.stopOnFail = stopOnFail; o.onlyTesting = only; o.verbose = verbose; o.retry = retry
             let report = try StackRunner.run(ctx, o)
             try finish(report, g, failed: !report.ok)
         } else {
             var o = BuildOptions()
-            o.action = "test"; o.onlyTesting = only; o.skipTesting = skip; o.verbose = verbose
+            o.action = "test"; o.onlyTesting = only; o.skipTesting = skip; o.verbose = verbose; o.retry = retry
+            if coverage { o.coverageBase = BaseBranch.resolve(compare == "none" ? BaseBranch.keyword : compare, ctx: ctx) }
             o.compareWarnings = warningsBase(compare, ctx)
             let (result, _) = try XcodeBuild.run(ctx, o)
             try Session.saveResult(result, ctx: ctx)
@@ -284,8 +295,11 @@ struct Snap: ParsableCommand {
     @Argument(help: "Screen name, e.g. login or settings-empty.") var name: String
     @Option(help: "Diff the tree against the same-named snap of a branch: a name like main or develop, or \"base\" for the branch this PR targets.") var compare: String?
 
+    @Option(help: "Also snap the screen in these looks, e.g. dark,ax5,dark+ax3 (appearance and text size). Snaps are named <name>@<variant>; the simulator's look is put back after.")
+    var variants: String?
+
     func run() throws {
-        try performStep(["snap", name] + (compare.map { ["--compare", $0] } ?? []), g)
+        try performStep(["snap", name] + (compare.map { ["--compare", $0] } ?? []) + (variants.map { ["--variants", $0] } ?? []), g)
     }
 }
 
@@ -305,6 +319,6 @@ struct PacketCommand: ParsableCommand {
         }
         let report = try Packet.build(ctx)
         if open { _ = try? Shell.run(["open", Paths.join(ctx.sessionDir, "report.html")]) }
-        if g.json || print { Output.emit(report, json: g.json) } else { Swift.print(report.summary) }
+        if g.json || print { Output.emit(report, json: g.json, maxLines: Output.lineBudget(g.maxLines)) } else { Swift.print(report.summary) }
     }
 }

@@ -42,8 +42,19 @@ public enum Runner {
 
     static var stampFile: String { Paths.join(Paths.runnerDir, "build.stamp") }
 
+    /// Installs the runner sources that ship with this binary when the installed ones differ, so a newer
+    /// proof never talks to an older runner (which wouldn't know its newer commands).
+    static func refreshSources() throws {
+        guard Paths.exists(project),
+              let resources = Installer.resources(executable: Bundle.main.executablePath ?? CommandLine.arguments[0]),
+              resources.isComplete, !Installer.runnerMatches(resources) else { return }
+        Output.stderr("updating proof runner sources from \(resources.root)…")
+        try Installer.installRunner(resources)
+    }
+
     /// Builds the runner if it was never built or its sources changed.
     public static func buildIfNeeded(force: Bool = false) throws {
+        try refreshSources()
         if !Paths.exists(project) {
             // A fresh or cleared ~/.proof: install the sources that ship with this binary instead of failing.
             let exe = Bundle.main.executablePath ?? CommandLine.arguments[0]
@@ -105,7 +116,8 @@ public enum Runner {
     public static func ensureRunning(simulator: String?) throws -> RunnerState {
         let sim = try Simulators.resolveBooted(simulator)
         let session = UUID().uuidString
-        if let s = state(), s.udid == sim.udid, isHealthy(session: s.session) { return s }
+        try refreshSources()
+        if let s = state(), s.udid == sim.udid, s.sourceStamp == sourceStamp(), isHealthy(session: s.session) { return s }
         if state() != nil { stop() }
         clearPort()   // a runner still shutting down (or one from another PROOF_HOME) would answer our health checks
         try buildIfNeeded()

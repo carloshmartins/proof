@@ -20,6 +20,43 @@ and the layout of `~/.proof`.
   branch its PR targets (`2 new vs main`) and list them, matched by file and message. Each branch's warnings
   are kept up to date across incremental builds. `--compare <branch|none>` changes the branch. `proof test
   --stack` marks `+N warnings` on the PR that added them.
+- Flaky tests: `proof test --retry N` (and `--stack --retry N`) runs a failing test up to N times. One that
+  passes on a retry is listed as `FLAKY` with its first failure and doesn't fail the run; one that fails every
+  time stays a `FAIL`. `--json` has them in `tests.flaky`.
+- Snap matrix: `proof snap <name> --variants dark,ax5,dark+ax3` also snaps the screen in other appearances
+  and Dynamic Type sizes (switched live, then put back), and `proof flow run <flow> --variants dark,ar,rtl`
+  replays the flow once more per variant, relaunched in a locale or right-to-left when asked. Variant snaps
+  are named `<name>@<variant>` and compare with the same variant on another branch, baselines included.
+- `proof ax audit` runs Xcode's accessibility audit (`performAccessibilityAudit`, iOS 17+ simulators) on the
+  current screen: contrast, hit regions, descriptions, Dynamic Type, clipped text and traits, next to the
+  controls without identifiers. `--only <types>` filters, `--strict` exits 1 when anything is found.
+- `proof review <PR>` reviews someone else's pull request: it fetches the PR (forks too), builds it in the
+  stack worktree, replays the repo's flows on the base (when its snaps are missing) and on the PR, and writes
+  the report with every screen before and after to the session `pr-<number>`. `--flow`, `--test`, `--open`.
+- `proof setup --agent codex|cursor|copilot|claude|all` installs the agent skill into each agent's personal
+  skills folder (`~/.agents/skills`, `~/.cursor/skills`, `~/.copilot/skills`, `~/.claude/skills`), next to
+  `--skill-dir` for any other agent.
+- `proof test` reads the test results from the `.xcresult` bundle (Xcode 16+): whole failure messages,
+  failing tests the log misses (a test that crashed), and the files failing tests attached, exported to
+  `results/test-attachments` and listed under the failure. One bundle per branch, replaced every run.
+- `proof test --coverage` reports how many of the lines the branch changed the tests run, against the PR's
+  base (`--compare` for another branch), and lists the untested ones per file. Uncommitted changes and new
+  files count; test files don't.
+- Pixel diff: a snap compared with another branch also compares the screenshots, so colour, image and
+  layout changes the accessibility tree can't see show up: the share of pixels changed, the box around
+  them, and `<name>.diff.png` with the changes in red, in the report next to before and after.
+- `proof flow run <flow> --devices "iPhone SE (3rd generation),iPad Air 13-inch (M3)"` replays the flow on more
+  simulators, installing the app this checkout built on each; snaps are named `<name>@<device>` and compare
+  with the same device on another branch.
+- `proof bisect` finds the commit that broke a flow (`--flow`), changed a screen (`--flow … --snap …`) or made
+  a test fail (`--test`), with a binary search between `--good` (default: where the branch left its base)
+  and `--bad` (default `HEAD`) in the stack worktree. Commits that don't build are skipped.
+- Output budget: `--max-lines N` on any command (or `PROOF_MAX_LINES`) cuts the text output to N lines and
+  keeps the full text in `~/.proof/last-output.txt`; JSON is never cut. `proof ui tree --depth N` limits the
+  tree.
+- Bug reports as flows: `proof flow export <flow> [--markdown] [--out file]` prints a self-contained flow
+  (includes expanded, a header with branch, commit, device and needed variables), and `proof repro
+  <issue|URL|file>` replays the flow from an issue (via `gh`) or a file, exiting 1 when the bug reproduced.
 - Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
   first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.
@@ -29,6 +66,10 @@ and the layout of `~/.proof`.
   for an agent to read), so a long build no longer looks stuck. The raw log is written as the build runs;
   outside a terminal its path is printed, for `tail -f`. `PROOF_NO_PROGRESS=1`
   turns it off.
+
+### Changed
+- proof refreshes the runner sources in `~/.proof/runner/src` when the ones shipped with the binary differ,
+  and restarts an older runner, so upgrading proof no longer needs `proof setup` for the runner.
 
 ### Fixed
 - Starting the simulator runner is reliable: each start gets a session the runner echoes on `/health`, so a

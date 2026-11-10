@@ -79,7 +79,7 @@ struct FlowCommand: ParsableCommand {
           expect --id home.title --timeout 15
           snap home
         """,
-        subcommands: [RunFlow.self, List.self, Show.self, Check.self]
+        subcommands: [RunFlow.self, List.self, Show.self, Check.self, Export.self]
     )
 
     struct RunFlow: ParsableCommand {
@@ -98,6 +98,10 @@ struct FlowCommand: ParsableCommand {
         @Flag(help: "Stream raw xcodebuild output to stderr (stack builds).") var verbose = false
         @Flag(help: "With --compare: replay the flow on the compared branch first even if its snaps exist.") var freshBaseline = false
         @Flag(help: "With --compare: never replay the flow on the compared branch; compare with the snaps it has.") var noBaseline = false
+        @Option(help: "Replay the flow again per variant, e.g. dark,ax5,ar,rtl (join with + to combine). Snaps are named <name>@<variant>.")
+        var variants: String?
+        @Option(help: "Replay the flow again on these simulators, comma separated, e.g. \"iPhone SE (3rd generation),iPad Air 13-inch (M3)\". Snaps are named <name>@<device>.")
+        var devices: String?
 
         func run() throws {
             var ctx = try Context.current()
@@ -113,6 +117,8 @@ struct FlowCommand: ParsableCommand {
             o.compareWith = compare
             o.video = video
             o.relaunch = relaunch
+            o.variants = try SnapVariant.parseList(variants) + SnapVariant.parseDevices(devices)
+            if stack && !o.variants.isEmpty { throw ValidationError("--variants and --devices don't work with --stack yet") }
             if stack {
                 var s = StackOptions()
                 s.branches = branches?.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
@@ -123,13 +129,19 @@ struct FlowCommand: ParsableCommand {
                 let loaded = try Flow.load(flow, repo: ctx.repo)
                 // Before and after in one command: if the compared branch lacks this flow's snaps, take them there first.
                 if let base = BaseBranch.resolve(compare, ctx: ctx), !noBaseline,
-                   Baseline.isNeeded(loaded, base: base, current: ctx.branch, repo: ctx.repo, vars: o.vars, fresh: freshBaseline) {
+                   Baseline.isNeeded(loaded, base: base, current: ctx.branch, repo: ctx.repo, vars: o.vars,
+                                     variants: o.variants, fresh: freshBaseline) {
                     try Baseline.capture(&ctx, flow: loaded, base: base, options: o, verbose: verbose)
                     o.compareWith = base
                     o.relaunch = true
                 }
-                let report = try FlowEngine.run(loaded, ctx: ctx, options: o)
-                try finish(report, g, failed: !report.ok)
+                if o.variants.isEmpty {
+                    let report = try FlowEngine.run(loaded, ctx: ctx, options: o)
+                    try finish(report, g, failed: !report.ok)
+                } else {
+                    let report = try FlowEngine.runVariants(loaded, ctx: ctx, options: o)
+                    try finish(report, g, failed: !report.ok)
+                }
             }
         }
     }
@@ -140,6 +152,28 @@ struct FlowCommand: ParsableCommand {
             let ctx = try Context.current()
             let names = Flow.list(repo: ctx.repo)
             try finish(MessageReport(names.isEmpty ? "no flows yet · record one: proof record start" : names.joined(separator: "\n")), g)
+        }
+    }
+
+    struct Export: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            abstract: "Print a flow as one self-contained file to attach to a bug report.",
+            discussion: "Includes are expanded and a header says where it was recorded. Paste it into an issue with --markdown; `proof repro <issue>` replays it.")
+        @OptionGroup var g: Global
+        @Argument var flow: String
+        @Flag(help: "Wrap it in a ```flow block, ready to paste into an issue.") var markdown = false
+        @Option(help: "Write to this file instead of printing it.") var out: String?
+        func run() throws {
+            let ctx = try Context.current()
+            let f = try Flow.load(flow, repo: ctx.repo)
+            let device = Runner.state().flatMap { s in ((try? Simulators.list()) ?? []).first { $0.udid == s.udid }?.title }
+            let text = Repro.export(f, branch: ctx.branch, sha: (try? Git.shortSHA(cwd: ctx.root)) ?? "?", device: device, markdown: markdown)
+            if let out {
+                try (text + "\n").write(toFile: (out as NSString).expandingTildeInPath, atomically: true, encoding: .utf8)
+                try finish(MessageReport("wrote \(out)"), g)
+            } else {
+                try finish(MessageReport(text), g)
+            }
         }
     }
 
@@ -170,6 +204,7 @@ struct FlowCommand: ParsableCommand {
                     let step = try s.substituting(v)
                     let bundle = ctx.config.bundleId ?? "check.bundle"
                     if FlowStep.simulatorActions.contains(step.action) { _ = try SimState.command(for: step, udid: "check", bundleId: bundle) }
+                    else if step.action == "snap" { _ = try SnapVariant.parseList(step.option("variants")) }
                     else { _ = try step.runnerRequest(defaultBundleId: bundle) }
                 }
                 catch {

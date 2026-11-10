@@ -69,3 +69,23 @@ proof record undo                       # drop the last step
 proof record status
 proof record stop login                 # save as login.flow (or: proof record discard)
 ```
+
+## Bug reports
+
+A flow is the most exact bug report there is. Export it into the issue, and anyone replays it:
+
+```sh
+proof flow export checkout --markdown     # paste the output into the issue
+proof repro 123                           # replay the flow in issue #123 (or its URL, or a .flow file)
+```
+
+`export` expands includes and adds a header with the branch, commit and device it was recorded on, and the
+`--var`s it needs. `repro` takes the first ```` ```flow ```` block of the issue (or the first code block made
+only of steps), saves it as the flow `issue-123`, and replays it from a fresh launch:
+
+```
+REPRODUCED issue #123 · step 3 tap --id checkout.pay — app crashed: EXC_BAD_ACCESS at Cart.swift:88
+```
+
+It exits 1 when the bug reproduced and 0 when every step passed, so after a fix `proof repro 123` is the check.
+

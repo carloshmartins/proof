@@ -16,9 +16,31 @@ public enum Installer {
         }
     }
 
-    /// Where the agent skill goes unless `--skill-dir` says otherwise.
+    /// Where the agent skill goes unless `--skill-dir` or `--agent` says otherwise.
     public static var defaultSkillDir: String {
         Paths.join(NSHomeDirectory(), ".claude", "skills", "proof")
+    }
+
+    /// Each agent's personal skills folder (they all read the same SKILL.md format). Personal, not per repo,
+    /// so nothing is written to your repositories.
+    public static let agentSkillDirs: [(agent: String, dir: String)] = [
+        ("claude", ".claude/skills/proof"),     // Claude Code
+        ("codex", ".agents/skills/proof"),      // OpenAI Codex (also read by other agents)
+        ("cursor", ".cursor/skills/proof"),     // Cursor
+        ("copilot", ".copilot/skills/proof"),   // GitHub Copilot
+    ]
+
+    /// The skill folders for `--agent` values; `all` means every known agent.
+    public static func skillDirs(agents: [String], home: String = NSHomeDirectory()) throws -> [String] {
+        let names = agents.flatMap { $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).lowercased() } }
+        if names.contains("all") { return agentSkillDirs.map { Paths.join(home, $0.dir) } }
+        return try names.map { name in
+            guard let entry = agentSkillDirs.first(where: { $0.agent == name }) else {
+                throw ProofError.message("unknown agent '\(name)'. Known: \(agentSkillDirs.map(\.agent).joined(separator: ", ")), all. "
+                                         + "For another agent: --skill-dir <its skills folder>/proof")
+            }
+            return Paths.join(home, entry.dir)
+        }
     }
 
     /// The resources next to an executable: `../share/proof` for a Homebrew or `PREFIX` install
@@ -46,28 +68,46 @@ public enum Installer {
 
     public struct Result: Report {
         public let runner: String
-        public let skill: String
+        public let skills: [String]
         public let source: String
         public var text: String {
-            ["installed runner sources  \(runner)", "installed agent skill    \(skill)", "from                     \(source)"]
+            (["installed runner sources  \(runner)"] + skills.map { "installed agent skill    \($0)" }
+             + ["from                     \(source)", "start a new agent session so it picks the skill up"])
                 .joined(separator: "\n")
         }
     }
 
-    /// Copies the runner sources to `runnerDest` (replacing what was there) and SKILL.md into `skillDir`.
-    /// Running it twice gives the same result.
+    /// Copies the runner sources to `runnerDest` (replacing what was there) and SKILL.md into each of
+    /// `skillDirs`. Running it twice gives the same result.
     public static func install(_ resources: Resources, runnerDest: String = Paths.runnerSource,
-                               skillDir: String = defaultSkillDir) throws -> Result {
+                               skillDirs: [String] = [defaultSkillDir]) throws -> Result {
         guard resources.isComplete else {
             throw ProofError.message("no runner sources or skill in \(resources.root)")
         }
         try installRunner(resources, runnerDest: runnerDest)
         let fm = FileManager.default
-        try Paths.ensureDir(skillDir)
-        let skill = Paths.join(skillDir, "SKILL.md")
-        try? fm.removeItem(atPath: skill)
-        try fm.copyItem(atPath: resources.skill, toPath: skill)
-        return Result(runner: runnerDest, skill: skill, source: resources.root)
+        var skills: [String] = []
+        for dir in skillDirs {
+            try Paths.ensureDir(dir)
+            let skill = Paths.join(dir, "SKILL.md")
+            try? fm.removeItem(atPath: skill)
+            try fm.copyItem(atPath: resources.skill, toPath: skill)
+            skills.append(skill)
+        }
+        return Result(runner: runnerDest, skills: skills, source: resources.root)
+    }
+
+    /// Whether the runner sources at `runnerDest` are the ones in `resources` (same files, same contents).
+    public static func runnerMatches(_ resources: Resources, runnerDest: String = Paths.runnerSource) -> Bool {
+        let fm = FileManager.default
+        guard let files = fm.enumerator(atPath: resources.runner) else { return false }
+        for case let file as String in files where !file.contains("xcuserdata") {
+            let source = Paths.join(resources.runner, file)
+            var isDir: ObjCBool = false
+            guard fm.fileExists(atPath: source, isDirectory: &isDir), !isDir.boolValue else { continue }
+            if !fm.contentsEqual(atPath: source, andPath: Paths.join(runnerDest, file)) { return false }
+        }
+        return true
     }
 
     /// Copies only the runner sources (used when ~/.proof was cleared; the skill is left alone).

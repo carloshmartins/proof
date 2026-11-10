@@ -113,3 +113,28 @@ final class BriefParserTests: XCTestCase {
         XCTAssertTrue(XcodeBuild.listsSimulator(showDestinations: ios))
     }
 }
+
+final class FlakyTestsParsing: XCTestCase {
+    func testRetriedTestsAreFlakyOrBroken() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "test-retry", withExtension: "log", subdirectory: "Fixtures"))
+        let r = BriefParser(root: "/Users/me/dev/App").parse(try String(contentsOf: url, encoding: .utf8), action: "test")
+        let t = try XCTUnwrap(r.tests)
+        XCTAssertEqual(t.passed, 2)
+        XCTAssertEqual(t.failed, 1)
+        XCTAssertEqual(t.failures.map(\.test), ["FlakyTests/testAlwaysFails"], "failed every run: broken")
+        let flaky = try XCTUnwrap(t.flaky?.first)
+        XCTAssertEqual(t.flaky?.count, 1)
+        XCTAssertEqual(flaky.test, "FlakyTests/testPassesOnSecondTry")
+        XCTAssertEqual(flaky.failedRuns, 1)
+        XCTAssertEqual(flaky.runs, 2)
+        XCTAssertEqual(flaky.line, 7)
+        XCTAssertTrue(r.text.contains("TESTS 2 passed · 1 failed · 1 flaky"), r.text)
+        XCTAssertTrue(r.text.contains("FLAKY  FlakyTests/testPassesOnSecondTry  failed 1 of 2 runs  FlakyTests.swift:7"), r.text)
+    }
+
+    func testNoRetriesNoFlakyField() throws {
+        let r = BriefParser().parse("Test Case '-[A.B testX]' passed (0.1 seconds).\n** TEST SUCCEEDED **", action: "test")
+        XCTAssertNil(r.tests?.flaky)
+        XCTAssertFalse(r.text.contains("flaky"))
+    }
+}

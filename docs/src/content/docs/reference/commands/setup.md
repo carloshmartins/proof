@@ -10,7 +10,7 @@ sidebar:
 Install the runner sources and the agent skill that ship with this proof binary.
 
 ```sh
-proof setup [--json] [--skill-dir <skill-dir>]
+proof setup [--json] [--max-lines <max-lines>] [--skill-dir <skill-dir>] [--agent <agent> ...]
 ```
 
 Copies the runner sources to ~/.proof/runner/src and SKILL.md to the skill folder.
@@ -19,7 +19,9 @@ Safe to run again.
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--skill-dir <skill-dir>` | Skills folder your agent reads (default ~/.claude/skills/proof). |
+| `--agent <agent>` | Install the skill for this agent: claude, codex, cursor, copilot or all. Repeatable. Repeatable. |
 
 **JSON output** (`--json`):
 

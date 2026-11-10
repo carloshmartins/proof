@@ -20,11 +20,12 @@ proof pr <subcommand>
 Unresolved review threads, reviews and comments, condensed for agents.
 
 ```sh
-proof pr comments [--json] [<number>] [--all] [--no-bots] [--full]
+proof pr comments [--json] [--max-lines <max-lines>] [<number>] [--all] [--no-bots] [--full]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<number>` | PR number. Defaults to the current branch's PR. |
 | `--all` | Include resolved threads. |
 | `--no-bots` | Exclude bot authors. |

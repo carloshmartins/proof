@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "DEVICE",
+        "deviceName" : "iPhone 17 Pro Max",
+        "exportedFileName" : "F2AA90D8-75B8-4360-B11B-C2E27C594D39.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "notes_0_10DD459D-492C-4C58-B64F-A5D0FA742199.txt",
+        "timestamp" : 1794255874.348
+      }
+    ],
+    "testIdentifier" : "FlakyTests/testAttachment()",
+    "testIdentifierURL" : "test://com.apple.xcode/CrashApp/CrashAppTests/FlakyTests/testAttachment"
+  }
+]

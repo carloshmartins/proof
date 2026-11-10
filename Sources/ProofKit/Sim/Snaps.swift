@@ -12,6 +12,7 @@ public struct SnapRecord: Codable, Report {
     public var missingIdentifiers: Int
     public var nodes: String? = nil    // absolute path to the nodes with frames (SnapNodes JSON)
     public var device: String? = nil   // "iPhone 16 Pro · iOS 26.1"
+    public var pixels: PixelDiffResult? = nil   // screenshot compared with the compared branch's
 
     public var text: String {
         var out = ["snap \(name) → \(screenshot)"]
@@ -23,7 +24,9 @@ public struct SnapRecord: Codable, Report {
                 if diff.count > 40 { out.append("… +\(diff.count - 40) lines (see packet)") }
             } else if diff != nil {
                 out.append("no tree changes vs \(compareBranch)")
-            } else {
+            }
+            if let pixels { out.append(pixels.text) }
+            if diff == nil {
                 out.append("no '\(name)' snap on \(compareBranch) to compare with · put it in a flow and run "
                            + "`proof flow run <flow> --compare \(compareBranch)`: proof snaps \(compareBranch) for you")
             }
@@ -87,6 +90,8 @@ public enum Snaps {
             if let base = load(sessionDir: otherDir).first(where: { $0.name == name }),
                let baseText = try? String(contentsOfFile: base.tree, encoding: .utf8) {
                 record.diff = LineDiff.diff(baseText.components(separatedBy: "\n"), treeText.components(separatedBy: "\n"))
+                // The tree misses colours, images and layout: compare the pixels too.
+                record.pixels = PixelDiff.diff(before: base.screenshot, after: png, output: Paths.join(dir, file + ".diff.png"))
             }
         }
         var all = load(sessionDir: ctx.sessionDir).filter { $0.name != name }

@@ -59,7 +59,16 @@ public struct FlowRunOptions {
     public var compareWith: String? = nil     // default --compare for snap steps
     public var video = false
     public var relaunch = false               // launch the app first unless the flow starts with launch/attach
+    public var variants: [SnapVariant] = []   // runVariants: replay once more per variant
+    public var variant: SnapVariant? = nil    // this run's variant: look, launch arguments, snap names
     public init() {}
+}
+
+/// A flow replayed as is and once per variant (`proof flow run <flow> --variants dark,ar`).
+public struct FlowVariantsReport: Report {
+    public let runs: [FlowRunReport]
+    public var ok: Bool { runs.allSatisfy(\.ok) }
+    public var text: String { runs.map(\.text).joined(separator: "\n\n") }
 }
 
 public enum FlowEngine {
@@ -76,8 +85,23 @@ public enum FlowEngine {
         switch step.action {
         case "snap":
             guard let name = step.positional.first else { throw ProofError.message("snap needs a name") }
-            let record = try Snaps.take(ctx, name: name, compareWith: step.option("compare") ?? compareWith)
-            return Outcome(detail: record.text, file: record.screenshot)
+            let compare = step.option("compare") ?? compareWith
+            let variants = try SnapVariant.parseList(step.option("variants"))
+            if let live = variants.first(where: \.needsRelaunch) {
+                throw ProofError.message("snap --variants \(live.name): a locale or rtl needs a relaunch. "
+                                         + "Put the snap in a flow and run `proof flow run <flow> --variants \(live.name)`")
+            }
+            let record = try Snaps.take(ctx, name: name, compareWith: compare)
+            guard !variants.isEmpty else { return Outcome(detail: record.text, file: record.screenshot) }
+            // The same screen in each look, then the simulator's own look back.
+            let look = SimulatorLook(udid: try Simulators.resolveBooted(ctx.config.simulator).udid)
+            defer { look.restore() }
+            var texts = [record.text]
+            for v in variants {
+                try look.apply(v)
+                texts.append(try Snaps.take(ctx, name: v.snapName(name), compareWith: compare).text)
+            }
+            return Outcome(detail: texts.joined(separator: "\n"), file: record.screenshot)
         case "sleep":
             let seconds = Double(step.positional.first ?? "1") ?? 1
             Thread.sleep(forTimeInterval: seconds)
@@ -127,6 +151,46 @@ public enum FlowEngine {
 
     /// Runs a flow, stopping at the first failure unless `continueOnFailure`. On failure it snaps
     /// the screen as "<flow>-failed" so the agent can see what was actually there.
+    /// Replays the flow as is, then once per `options.variants`, each relaunched in its look. A device
+    /// variant installs the app this checkout built on that simulator and moves the runner there.
+    /// `product` is the app to install on other devices; by default the one this checkout built.
+    public static func runVariants(_ flow: Flow, ctx: Context, options: FlowRunOptions,
+                                   product built: XcodeBuild.AppProduct? = nil) throws -> FlowVariantsReport {
+        var runs = [try run(flow, ctx: ctx, options: options)]
+        var product = built
+        for v in options.variants {
+            if Interrupt.isRequested { break }
+            var o = options
+            o.variant = v
+            o.relaunch = true
+            o.video = false
+            var vctx = ctx
+            if let device = v.device {
+                vctx.config.simulator = device
+                let sim = try Simulators.resolveBooted(device)
+                if product == nil { product = try XcodeBuild.appProduct(ctx) }
+                try Shell.checked(["xcrun", "simctl", "install", sim.udid, product!.path])
+                if vctx.config.bundleId == nil { vctx.config.bundleId = product!.bundleId }
+            }
+            runs.append(try run(flow, ctx: vctx, options: o))
+        }
+        return FlowVariantsReport(runs: runs)
+    }
+
+    /// A step as it runs under a variant: snaps get the variant's name, launches its launch arguments.
+    static func adapt(_ step: FlowStep, to variant: SnapVariant?) -> FlowStep {
+        guard let variant else { return step }
+        var s = step
+        if s.action == "snap", let name = s.positional.first {
+            s.positional[0] = variant.snapName(name)
+            s.options.removeAll { $0.name == "variants" }
+        }
+        if s.action == "launch" {
+            s.options += variant.launchArguments.map { FlowStep.Option(name: "arg", value: $0) }
+        }
+        return s
+    }
+
     public static func run(_ flow: Flow, ctx: Context, options: FlowRunOptions) throws -> FlowRunReport {
         var steps = flow.steps
         if options.relaunch, let first = steps.first?.action, first != "launch" && first != "attach" {
@@ -134,8 +198,12 @@ public enum FlowEngine {
         } else if options.relaunch, steps.isEmpty {
             steps = [FlowStep(action: "launch")]
         }
+        steps = steps.map { adapt($0, to: options.variant) }
+        let look = try options.variant.map { _ in SimulatorLook(udid: try Simulators.resolveBooted(ctx.config.simulator).udid) }
+        if let look, let v = options.variant { try look.apply(v) }
+        defer { look?.restore() }
         let start = Date()
-        var report = FlowRunReport(flow: flow.name, branch: ctx.branch, sha: (try? Git.shortSHA(cwd: ctx.root)) ?? "?",
+        var report = FlowRunReport(flow: options.variant.map { $0.snapName(flow.name) } ?? flow.name, branch: ctx.branch, sha: (try? Git.shortSHA(cwd: ctx.root)) ?? "?",
                                    steps: steps.enumerated().map { StepResult(index: $0 + 1, line: $1.line, status: "skipped") },
                                    failureSnap: nil, video: nil, duration: 0)
         Events.append(ProofEvent(kind: "flow", name: flow.name, status: "started", total: steps.count), ctx: ctx)

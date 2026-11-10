@@ -149,11 +149,11 @@ root.
 
 ## Use it with a coding agent
 
-`proof setup` installs the skill where Claude Code reads it (`~/.claude/skills/proof`). For another agent,
-point it at that agent's skills folder:
+`proof setup` installs the skill where Claude Code reads it (`~/.claude/skills/proof`). For other agents:
 
 ```sh
-proof setup --skill-dir ~/.agents/skills/proof
+proof setup --agent codex            # also cursor, copilot, or all
+proof setup --skill-dir <folder>/proof   # any other agent's skills folder
 ```
 
 The skill tells the agent to:
@@ -355,6 +355,10 @@ Every command prints short text by default, accepts `--json` for scripts, and ex
 | `proof flow list / show / check / run` | Manage and replay flows |
 | `proof video start / stop` | Record the simulator screen |
 | `proof ax scan` | Find controls without accessibility identifiers in your code |
+| `proof bisect --flow <f> [--snap <s>] \| --test <id>` | Find the commit that broke a flow, changed a screen or failed a test |
+| `proof flow export <f> --markdown`, `proof repro <issue>` | Put a flow in a bug report; replay the flow from an issue |
+| `proof review <PR>` | Build someone else's PR, replay your flows on its base and on it, open the before and after |
+| `proof ax audit` | Xcode's accessibility audit of the current screen: contrast, hit areas, Dynamic Type, … |
 | `proof pr comments` | Unresolved review threads on this branch's PR |
 | `proof packet` | Build the HTML/Markdown report (`--open` to view it) |
 | `proof stop` | Stop the newest running proof command, like Ctrl-C (`--all` for every one) |

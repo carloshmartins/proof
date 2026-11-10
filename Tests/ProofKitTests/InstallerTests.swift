@@ -70,16 +70,16 @@ final class InstallerTests: XCTestCase {
         try FileManager.default.createDirectory(atPath: runner, withIntermediateDirectories: true)
         try "old".write(toFile: runner + "/stale.swift", atomically: true, encoding: .utf8)
 
-        let r = try Installer.install(Installer.Resources(root: src), runnerDest: runner, skillDir: skillDir)
+        let r = try Installer.install(Installer.Resources(root: src), runnerDest: runner, skillDirs: [skillDir])
         XCTAssertEqual(r.runner, runner)
-        XCTAssertEqual(r.skill, skillDir + "/SKILL.md")
+        XCTAssertEqual(r.skills, [skillDir + "/SKILL.md"])
         XCTAssertTrue(Paths.exists(runner + "/ProofRunner.xcodeproj/project.pbxproj"))
         XCTAssertFalse(Paths.exists(runner + "/stale.swift"))
         XCTAssertEqual(try String(contentsOfFile: skillDir + "/SKILL.md", encoding: .utf8), "skill v1")
         XCTAssertTrue(r.text.contains("installed agent skill"))
 
         try "skill v2".write(toFile: src + "/skill/proof/SKILL.md", atomically: true, encoding: .utf8)
-        _ = try Installer.install(Installer.Resources(root: src), runnerDest: runner, skillDir: skillDir)
+        _ = try Installer.install(Installer.Resources(root: src), runnerDest: runner, skillDirs: [skillDir])
         XCTAssertEqual(try String(contentsOfFile: skillDir + "/SKILL.md", encoding: .utf8), "skill v2")
         XCTAssertFalse(Paths.exists(runner + ".new"))
     }
@@ -95,6 +95,24 @@ final class InstallerTests: XCTestCase {
 
     func testInstallRefusesIncompleteResources() {
         XCTAssertThrowsError(try Installer.install(Installer.Resources(root: tmp + "/missing"),
-                                                   runnerDest: tmp + "/r", skillDir: tmp + "/s"))
+                                                   runnerDest: tmp + "/r", skillDirs: [tmp + "/s"]))
+    }
+
+    func testAgentSkillFolders() throws {
+        XCTAssertEqual(try Installer.skillDirs(agents: ["codex"], home: "/h"), ["/h/.agents/skills/proof"])
+        XCTAssertEqual(try Installer.skillDirs(agents: ["cursor,copilot"], home: "/h"),
+                       ["/h/.cursor/skills/proof", "/h/.copilot/skills/proof"])
+        XCTAssertEqual(try Installer.skillDirs(agents: ["all"], home: "/h").count, 4)
+        XCTAssertEqual(try Installer.skillDirs(agents: [], home: "/h"), [])
+        XCTAssertThrowsError(try Installer.skillDirs(agents: ["vim"], home: "/h"))
+    }
+
+    func testInstallsTheSkillForSeveralAgents() throws {
+        let src = tmp + "/src"
+        try makeResources(src)
+        let dirs = try Installer.skillDirs(agents: ["claude", "codex"], home: tmp + "/home")
+        let r = try Installer.install(Installer.Resources(root: src), runnerDest: tmp + "/runner", skillDirs: dirs)
+        XCTAssertEqual(r.skills.count, 2)
+        for d in dirs { XCTAssertEqual(try String(contentsOfFile: d + "/SKILL.md", encoding: .utf8), "skill v1") }
     }
 }

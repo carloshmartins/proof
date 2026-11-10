@@ -22,11 +22,12 @@ Every action command is also a flow step: while `proof record` is on, it is reco
 Build (once) and start the runner on the configured simulator.
 
 ```sh
-proof ui start [--json] [--rebuild]
+proof ui start [--json] [--max-lines <max-lines>] [--rebuild]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--rebuild` | Rebuild the runner even if it looks current. |
 
 **JSON output** (`--json`):
@@ -36,8 +37,12 @@ proof ui start [--json] [--rebuild]
 ## proof ui stop
 
 ```sh
-proof ui stop [--json]
+proof ui stop [--json] [--max-lines <max-lines>]
 ```
+
+| Argument | Description |
+|---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 
 **JSON output** (`--json`):
 
@@ -46,8 +51,12 @@ proof ui stop [--json]
 ## proof ui status
 
 ```sh
-proof ui status [--json]
+proof ui status [--json] [--max-lines <max-lines>]
 ```
+
+| Argument | Description |
+|---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 
 **JSON output** (`--json`):
 
@@ -58,11 +67,12 @@ proof ui status [--json]
 Launch (or relaunch) the app under test.
 
 ```sh
-proof ui launch [--json] [--bundle-id <bundle-id>] [--arg <arg> ...] [--env <env> ...]
+proof ui launch [--json] [--max-lines <max-lines>] [--bundle-id <bundle-id>] [--arg <arg> ...] [--env <env> ...]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--bundle-id <bundle-id>` | Bundle id; defaults to the configured one. |
 | `--arg <arg>` | Launch argument. Repeatable. Repeatable. |
 | `--env <env>` | KEY=VALUE launch environment. Repeatable. Repeatable. |
@@ -76,11 +86,12 @@ proof ui launch [--json] [--bundle-id <bundle-id>] [--arg <arg> ...] [--env <env
 Attach to the already-running app without relaunching.
 
 ```sh
-proof ui attach [--json] [--bundle-id <bundle-id>]
+proof ui attach [--json] [--max-lines <max-lines>] [--bundle-id <bundle-id>]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--bundle-id <bundle-id>` | Bundle id; defaults to the configured one. |
 
 **JSON output** (`--json`):
@@ -90,8 +101,12 @@ proof ui attach [--json] [--bundle-id <bundle-id>]
 ## proof ui terminate
 
 ```sh
-proof ui terminate [--json]
+proof ui terminate [--json] [--max-lines <max-lines>]
 ```
+
+| Argument | Description |
+|---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 
 **JSON output** (`--json`):
 
@@ -102,14 +117,16 @@ proof ui terminate [--json]
 Print the accessibility tree of the current screen.
 
 ```sh
-proof ui tree [--json] [--frames] [--interactive] [--missing-ids]
+proof ui tree [--json] [--max-lines <max-lines>] [--frames] [--interactive] [--missing-ids] [--depth <depth>]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--frames` | Include element frames. |
 | `--interactive, -i` | Only interactive elements, flat. |
 | `--missing-ids` | Only interactive elements missing an accessibility identifier. |
+| `--depth <depth>` | Only elements this many levels deep or less (0 is the top). |
 
 **JSON output** (`--json`):
 
@@ -120,7 +137,7 @@ proof ui tree [--json] [--frames] [--interactive] [--missing-ids]
 Which element is at a point (in points)? Prints it and the flow step that targets it.
 
 ```sh
-proof ui at [--json] <x> <y> [--tap] [--as <as>]
+proof ui at [--json] [--max-lines <max-lines>] <x> <y> [--tap] [--as <as>]
 ```
 
 With --tap it also taps it through that selector (and records it). This is click-to-record.
@@ -128,6 +145,7 @@ With --tap it also taps it through that selector (and records it). This is click
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<x>` | **Required.** |
 | `<y>` | **Required.** |
 | `--tap` | Tap the element via its selector. |
@@ -142,11 +160,12 @@ With --tap it also taps it through that selector (and records it). This is click
 Tap an element (or --x/--y in points).
 
 ```sh
-proof ui tap [--json] [--id <id>] [--label <label>] [--text <text>] [--type <type>] [--index <index>] [--x <x>] [--y <y>]
+proof ui tap [--json] [--max-lines <max-lines>] [--id <id>] [--label <label>] [--text <text>] [--type <type>] [--index <index>] [--x <x>] [--y <y>]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--id <id>` | Exact accessibility identifier. |
 | `--label <label>` | Exact accessibility label. |
 | `--text <text>` | Case-insensitive substring of label or identifier. |
@@ -162,11 +181,12 @@ proof ui tap [--json] [--id <id>] [--label <label>] [--text <text>] [--type <typ
 ## proof ui longpress
 
 ```sh
-proof ui longpress [--json] [--id <id>] [--label <label>] [--text <text>] [--type <type>] [--index <index>] [--duration <duration>]
+proof ui longpress [--json] [--max-lines <max-lines>] [--id <id>] [--label <label>] [--text <text>] [--type <type>] [--index <index>] [--duration <duration>]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--id <id>` | Exact accessibility identifier. |
 | `--label <label>` | Exact accessibility label. |
 | `--text <text>` | Case-insensitive substring of label or identifier. |
@@ -183,11 +203,12 @@ proof ui longpress [--json] [--id <id>] [--label <label>] [--text <text>] [--typ
 Type text, optionally into a selected field.
 
 ```sh
-proof ui type [--json] <text> [--id <id>] [--label <label>] [--text <text>] [--type <type>] [--index <index>] [--clear] [--submit]
+proof ui type [--json] [--max-lines <max-lines>] <text> [--id <id>] [--label <label>] [--text <text>] [--type <type>] [--index <index>] [--clear] [--submit]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<text>` | **Required.** |
 | `--id <id>` | Exact accessibility identifier. |
 | `--label <label>` | Exact accessibility label. |
@@ -204,11 +225,12 @@ proof ui type [--json] <text> [--id <id>] [--label <label>] [--text <text>] [--t
 ## proof ui swipe
 
 ```sh
-proof ui swipe [--json] <direction> [--id <id>] [--label <label>] [--text <text>] [--type <type>] [--index <index>]
+proof ui swipe [--json] [--max-lines <max-lines>] <direction> [--id <id>] [--label <label>] [--text <text>] [--type <type>] [--index <index>]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<direction>` | up \| down \| left \| right **Required.** |
 | `--id <id>` | Exact accessibility identifier. |
 | `--label <label>` | Exact accessibility label. |
@@ -225,11 +247,12 @@ proof ui swipe [--json] <direction> [--id <id>] [--label <label>] [--text <text>
 Wait for an element to appear (or disappear with --gone). Default 10s.
 
 ```sh
-proof ui wait [--json] [--id <id>] [--label <label>] [--text <text>] [--type <type>] [--index <index>] [--timeout <timeout>] [--gone]
+proof ui wait [--json] [--max-lines <max-lines>] [--id <id>] [--label <label>] [--text <text>] [--type <type>] [--index <index>] [--timeout <timeout>] [--gone]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--id <id>` | Exact accessibility identifier. |
 | `--label <label>` | Exact accessibility label. |
 | `--text <text>` | Case-insensitive substring of label or identifier. |
@@ -247,11 +270,12 @@ proof ui wait [--json] [--id <id>] [--label <label>] [--text <text>] [--type <ty
 Assert an element is on screen (or gone with --gone). Default 5s. Use as a flow checkpoint.
 
 ```sh
-proof ui expect [--json] [--id <id>] [--label <label>] [--text <text>] [--type <type>] [--index <index>] [--timeout <timeout>] [--gone]
+proof ui expect [--json] [--max-lines <max-lines>] [--id <id>] [--label <label>] [--text <text>] [--type <type>] [--index <index>] [--timeout <timeout>] [--gone]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--id <id>` | Exact accessibility identifier. |
 | `--label <label>` | Exact accessibility label. |
 | `--text <text>` | Case-insensitive substring of label or identifier. |
@@ -267,8 +291,12 @@ proof ui expect [--json] [--id <id>] [--label <label>] [--text <text>] [--type <
 ## proof ui home
 
 ```sh
-proof ui home [--json]
+proof ui home [--json] [--max-lines <max-lines>]
 ```
+
+| Argument | Description |
+|---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 
 **JSON output** (`--json`):
 
@@ -279,11 +307,12 @@ proof ui home [--json]
 Handle an in-app or system alert (accepts by default).
 
 ```sh
-proof ui alert [--json] [--button <button>] [--dismiss]
+proof ui alert [--json] [--max-lines <max-lines>] [--button <button>] [--dismiss]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--button <button>` | Exact button label to tap. |
 | `--dismiss` | Tap the first (cancel) button instead of the last. |
 
@@ -296,11 +325,12 @@ proof ui alert [--json] [--button <button>] [--dismiss]
 Open a URL on the simulator: a deep link or universal link.
 
 ```sh
-proof ui open [--json] <url>
+proof ui open [--json] [--max-lines <max-lines>] <url>
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<url>` | The URL, e.g. tempo://presets/new. **Required.** |
 
 **JSON output** (`--json`):
@@ -312,13 +342,14 @@ proof ui open [--json] <url>
 Send a push notification to the app under test.
 
 ```sh
-proof ui push [--json] [--title <title>] [--body <body>] [--badge <badge>] [--sound <sound>] [--payload <payload>] [--bundle-id <bundle-id>]
+proof ui push [--json] [--max-lines <max-lines>] [--title <title>] [--body <body>] [--badge <badge>] [--sound <sound>] [--payload <payload>] [--bundle-id <bundle-id>]
 ```
 
 Build it from --title, --body, --badge and --sound, or pass a full APNs payload with --payload.
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--title <title>` |  |
 | `--body <body>` |  |
 | `--badge <badge>` |  |
@@ -335,13 +366,14 @@ Build it from --title, --body, --badge and --sound, or pass a full APNs payload 
 Grant, revoke or reset a privacy permission for the app under test.
 
 ```sh
-proof ui permission [--json] <verb> <service> [--bundle-id <bundle-id>]
+proof ui permission [--json] [--max-lines <max-lines>] <verb> <service> [--bundle-id <bundle-id>]
 ```
 
 Services: all, calendar, contacts-limited, contacts, location, location-always, photos-add, photos, media-library, microphone, motion, reminders, siri. Revoking may terminate the app.
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<verb>` | grant \| revoke \| reset **Required.** |
 | `<service>` | The service, e.g. photos, location, contacts, microphone. **Required.** |
 | `--bundle-id <bundle-id>` | Bundle id; defaults to the configured one. |
@@ -355,11 +387,12 @@ Services: all, calendar, contacts-limited, contacts, location, location-always, 
 Set the simulated location (latitude,longitude), or clear it.
 
 ```sh
-proof ui location [--json] [<coordinate>] [--clear]
+proof ui location [--json] [--max-lines <max-lines>] [<coordinate>] [--clear]
 ```
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `<coordinate>` | latitude,longitude, e.g. 51.5072,-0.1276 |
 | `--clear` | Stop simulating a location. |
 
@@ -372,13 +405,14 @@ proof ui location [--json] [<coordinate>] [--clear]
 The app's latest crash: exception, where in your code, and the crashed thread.
 
 ```sh
-proof ui crashes [--json] [--minutes <minutes>] [--bundle-id <bundle-id>]
+proof ui crashes [--json] [--max-lines <max-lines>] [--minutes <minutes>] [--bundle-id <bundle-id>]
 ```
 
 Read from the crash reports macOS writes for simulator apps. A failing ui step or flow step reports a crash on its own.
 
 | Argument | Description |
 |---|---|
+| `--max-lines <max-lines>` | Cut text output to this many lines; the rest goes to ~/.proof/last-output.txt. Also PROOF_MAX_LINES. |
 | `--minutes <minutes>` | Look back this many minutes. Default: `60`. |
 | `--bundle-id <bundle-id>` | Bundle id; defaults to the configured one. |
 
