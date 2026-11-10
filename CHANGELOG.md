@@ -7,6 +7,8 @@ and the layout of `~/.proof`.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-10
+
 ### Added
 - Simulator state, as `proof ui` commands and flow steps: `open <url>` for deep links, `push` for
   notifications (`--title`, `--body`, `--badge`, `--sound` or a `--payload` file), `permission grant|revoke|reset
