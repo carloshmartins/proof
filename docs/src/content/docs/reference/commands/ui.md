@@ -15,7 +15,7 @@ proof ui <subcommand>
 
 Every action command is also a flow step: while `proof record` is on, it is recorded.
 
-**Subcommands:** [`start`](#proof-ui-start) · [`stop`](#proof-ui-stop) · [`status`](#proof-ui-status) · [`launch`](#proof-ui-launch) · [`attach`](#proof-ui-attach) · [`terminate`](#proof-ui-terminate) · [`tree`](#proof-ui-tree) · [`at`](#proof-ui-at) · [`tap`](#proof-ui-tap) · [`longpress`](#proof-ui-longpress) · [`type`](#proof-ui-type) · [`swipe`](#proof-ui-swipe) · [`wait`](#proof-ui-wait) · [`expect`](#proof-ui-expect) · [`home`](#proof-ui-home) · [`alert`](#proof-ui-alert) · [`open`](#proof-ui-open) · [`push`](#proof-ui-push) · [`permission`](#proof-ui-permission) · [`location`](#proof-ui-location)
+**Subcommands:** [`start`](#proof-ui-start) · [`stop`](#proof-ui-stop) · [`status`](#proof-ui-status) · [`launch`](#proof-ui-launch) · [`attach`](#proof-ui-attach) · [`terminate`](#proof-ui-terminate) · [`tree`](#proof-ui-tree) · [`at`](#proof-ui-at) · [`tap`](#proof-ui-tap) · [`longpress`](#proof-ui-longpress) · [`type`](#proof-ui-type) · [`swipe`](#proof-ui-swipe) · [`wait`](#proof-ui-wait) · [`expect`](#proof-ui-expect) · [`home`](#proof-ui-home) · [`alert`](#proof-ui-alert) · [`open`](#proof-ui-open) · [`push`](#proof-ui-push) · [`permission`](#proof-ui-permission) · [`location`](#proof-ui-location) · [`crashes`](#proof-ui-crashes)
 
 ## proof ui start
 
@@ -362,6 +362,25 @@ proof ui location [--json] [<coordinate>] [--clear]
 |---|---|
 | `<coordinate>` | latitude,longitude, e.g. 51.5072,-0.1276 |
 | `--clear` | Stop simulating a location. |
+
+**JSON output** (`--json`):
+
+- [`MessageReport`](../../json-output/#messagereport)
+
+## proof ui crashes
+
+The app's latest crash: exception, where in your code, and the crashed thread.
+
+```sh
+proof ui crashes [--json] [--minutes <minutes>] [--bundle-id <bundle-id>]
+```
+
+Read from the crash reports macOS writes for simulator apps. A failing ui step or flow step reports a crash on its own.
+
+| Argument | Description |
+|---|---|
+| `--minutes <minutes>` | Look back this many minutes. Default: `60`. |
+| `--bundle-id <bundle-id>` | Bundle id; defaults to the configured one. |
 
 **JSON output** (`--json`):
 

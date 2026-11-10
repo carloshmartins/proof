@@ -19,6 +19,7 @@ public struct FlowRunReport: Report, Codable {
     public var video: String?
     public var duration: Double
     public var interrupted: Bool? = nil       // stopped by SIGINT (proof stop, Ctrl-C); remaining steps skipped
+    public var crash: CrashReport? = nil      // the app crashed during the run
 
     public var ok: Bool { interrupted != true && steps.allSatisfy { $0.status == "ok" } }
     public var failedAt: Int? { steps.first(where: { $0.status == "failed" })?.index }
@@ -45,6 +46,7 @@ public struct FlowRunReport: Report, Codable {
                 out.append(contentsOf: d.split(separator: "\n").dropFirst().prefix(12).map { "       " + $0 })
             }
         }
+        if let crash { out.append(crash.text) }
         if let failureSnap { out.append("failure snap → \(failureSnap)") }
         if let video { out.append("video → \(video)") }
         return out.joined(separator: "\n")
@@ -161,6 +163,10 @@ public enum FlowEngine {
                 report.steps[i].status = "failed"
                 report.steps[i].error = "\(error)"
                 failed = true
+                if let crash = Crashes.unreported(ctx, since: start, wait: Crashes.looksLikeAppGone("\(error)") ? 5 : 0) {
+                    report.crash = crash
+                    report.steps[i].error = crash.summary
+                }
             }
             report.steps[i].duration = Date().timeIntervalSince(t0)
             Events.append(ProofEvent(kind: "step", name: raw.line, status: report.steps[i].status,
