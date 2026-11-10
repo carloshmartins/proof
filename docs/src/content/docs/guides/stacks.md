@@ -33,6 +33,7 @@ STACK 3 branches · failures
 ```
 
 - `← introduced here` marks the branch where a failure first appears. Fix it there.
+- `+N warnings` marks a branch that adds warnings compared with the branch below it, with the first few.
 - `(from <branch>)` marks the same failure inherited by the branches above.
 
 ```sh

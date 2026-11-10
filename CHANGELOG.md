@@ -16,6 +16,10 @@ and the layout of `~/.proof`.
   error shows the exception, the file and line in the app's code and the crashed thread, read from the
   simulator crash report, instead of "element not found". Flow results carry it as `crash`, and
   `proof ui crashes` shows the app's latest crash.
+- New warnings only: `proof build` and `proof test` say how many warnings the branch adds compared with the
+  branch its PR targets (`2 new vs main`) and list them, matched by file and message. Each branch's warnings
+  are kept up to date across incremental builds. `--compare <branch|none>` changes the branch. `proof test
+  --stack` marks `+N warnings` on the PR that added them.
 - Before and after in one command: `proof flow run <flow> --compare <branch>` replays the flow on `<branch>`
   first (in the stack worktree) when it doesn't have the flow's snaps yet, reinstalls the current checkout,
   and diffs every snap. `--fresh-baseline` replays it again; `--no-baseline` never does.

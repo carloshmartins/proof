@@ -10,13 +10,14 @@ sidebar:
 Build the scheme for the simulator and print a condensed result.
 
 ```sh
-proof build [--json] [--warnings] [--verbose] [<extra> ...]
+proof build [--json] [--warnings] [--verbose] [--compare <compare>] [<extra> ...]
 ```
 
 | Argument | Description |
 |---|---|
 | `--warnings` | List warnings, not just the count. |
 | `--verbose` | Stream raw xcodebuild output to stderr. |
+| `--compare <compare>` | Count new warnings against this branch, or "base" for the branch this PR targets. "none" turns it off. Default: `base`. |
 | `<extra>` | Extra xcodebuild arguments after --. Repeatable. |
 
 **JSON output** (`--json`):

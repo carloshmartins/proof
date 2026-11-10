@@ -69,7 +69,11 @@ public struct StackReport: Report, Decodable {
             var line = (r.succeeded ? "✓ " : "✗ ") + "\(run.branch) (\(run.sha))"
             if let t = r.tests { line += "  \(t.passed) passed, \(t.failed) failed" }
             if !r.errors.isEmpty { line += "  \(r.errors.count) build error\(r.errors.count == 1 ? "" : "s")" }
+            if let added = r.newWarnings, !added.isEmpty { line += "  +\(added.count) warning\(added.count == 1 ? "" : "s")" }
             out.append(line)
+            for w in r.newWarnings?.prefix(3) ?? [] {
+                out.append("    warn  \(BriefResult.location(w.file, w.line, w.column))\(w.message)  ← added here")
+            }
             for e in r.errors.prefix(5) {
                 out.append("    error \(BriefResult.location(e.file, e.line, e.column))\(e.message)")
             }
@@ -150,6 +154,9 @@ public enum StackRunner {
             b.derivedData = Paths.worktreeDerivedData(repo: ctx.repo)
             b.onlyTesting = opts.onlyTesting
             b.verbose = opts.verbose
+            // New warnings are counted against the branch below, like failures.
+            let position = planned.branches.firstIndex(of: branch) ?? 0
+            b.compareWarnings = position > 0 ? planned.branches[position - 1] : planned.base
             let (result, _) = try XcodeBuild.run(ctx.with(branch: branch, root: wt), b)
             runs.append(BranchRun(branch: branch, sha: (try? Git.shortSHA(cwd: wt)) ?? "?", result: result, pr: planned.prs[branch]))
             if opts.stopOnFail && !result.succeeded {

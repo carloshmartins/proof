@@ -9,6 +9,7 @@ public struct BuildOptions {
     public var extra: [String] = []
     public var verbose = false                  // stream raw output to stderr
     public var keepWarnings = false
+    public var compareWarnings: String? = nil   // branch to report new warnings against
     public init() {}
 }
 
@@ -55,8 +56,16 @@ public enum XcodeBuild {
         progress?.finish()
         let duration = Date().timeIntervalSince(start)
 
-        var brief = BriefParser(root: root, keepWarnings: opts.keepWarnings).parse(r.combined, action: opts.action, duration: duration)
+        var brief = BriefParser(root: root, keepWarnings: true).parse(r.combined, action: opts.action, duration: duration)
         if brief.status == "unknown" { brief.status = r.ok ? "succeeded" : "failed" }
+        let fresh = brief.warnings ?? []
+        if !opts.keepWarnings { brief.warnings = nil }
+        if let all = Warnings.record(brief, allWarnings: fresh, log: r.combined, root: root, sessionDir: ctx.sessionDir),
+           let base = opts.compareWarnings, base != ctx.branch,
+           let baseWarnings = Warnings.load(sessionDir: Paths.session(repo: ctx.repo, branch: base)) {
+            brief.newWarnings = Warnings.added(current: all, base: baseWarnings)
+            brief.warningsBase = base
+        }
         Events.append(ProofEvent(kind: opts.action, name: label, status: brief.succeeded ? "ok" : "failed",
                                  detail: brief.text.split(separator: "\n").first.map(String.init), duration: duration, file: logPath), ctx: ctx)
         return (brief, logPath)
